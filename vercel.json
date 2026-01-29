@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "intern-management-app-nwannaji",
   "builds": [
     {
       "src": "package.json",
