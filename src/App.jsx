@@ -2,11 +2,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Landing from "./pages/Landing";
-import DashboardAuth from "./pages/DashboardAuth";
-import Login from './pages/Login';
+import Landing from './pages/Landing';
+import DashboardAuth from './pages/DashboardAuth';
 import Register from './pages/Register';
 import Programs from './pages/Programs';
+import ApplyPage from './pages/ApplyPage';
 import ApplicationForm from './pages/ApplicationForm';
 import MyApplications from './pages/MyApplications';
 import ApplicationDetail from './pages/ApplicationDetail';
@@ -20,9 +20,15 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<DashboardAuth />} />
+            <Route path="/auth" element={<DashboardAuth />} />
             <Route path="/register" element={<Register />} />
             <Route path="/programs" element={<Programs />} />
+            <Route path="/apply" element={
+              <ProtectedRoute>
+                <ApplyPage />
+              </ProtectedRoute>
+            } />
             <Route path="/apply/:programId" element={
               <ProtectedRoute>
                 <ApplicationForm />
@@ -34,7 +40,6 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/intern-positions" element={<Positions />} />
-            <Route path="/auth" element={<DashboardAuth />} />
             
             <Route path="/my-applications" element={
               <ProtectedRoute>

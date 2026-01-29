@@ -15,6 +15,7 @@ const AdminDashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const { logout } = useAuth();
 
   useEffect(() => {
     fetchApplications();
@@ -137,26 +138,25 @@ const AdminDashboard = () => {
                   Manage internship and NYSC applications
                 </p>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex items-center space-x-3">
                 <Link
                   to="/programs"
-                  className="text-blue-600 hover:text-blue-500"
+                  className="text-blue-600 hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Manage Programs
                 </Link>
                 <Link
                   to="/"
-                  className="text-blue-600 hover:text-blue-500"
+                  className="text-blue-600 hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Back to Home
                 </Link>
                 <button
                   onClick={() => {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.location.href = '/auth';
+                    logout();
+                    toast.success('Logged out successfully!');
                   }}
-                  className="text-red-600 hover:text-red-500"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                 >
                   Logout
                 </button>

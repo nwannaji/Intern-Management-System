@@ -30,7 +30,9 @@ class Document(models.Model):
     verification_notes = models.TextField(blank=True, null=True)
     
     class Meta:
-        unique_together = ['application', 'document_type']
+        # Removed unique_together constraint to allow either/or logic
+        # The serializer will enforce one document per application
+        pass
     
     def __str__(self):
         return f"{self.application} - {self.document_type.name}"

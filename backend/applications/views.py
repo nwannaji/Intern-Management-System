@@ -11,15 +11,49 @@ from .serializers import ProgramSerializer, ApplicationSerializer, ApplicationCr
 User = get_user_model()
 
 
-class ProgramViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Program.objects.filter(is_active=True)
+class ProgramViewSet(viewsets.ModelViewSet):
+    queryset = Program.objects.all()
     serializer_class = ProgramSerializer
-    permission_classes = []  # Allow public access to view programs
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['program_type']
     search_fields = ['name', 'description']
     ordering_fields = ['start_date', 'application_deadline', 'name']
     ordering = ['-start_date']
+    
+    def get_permissions(self):
+        # Allow public access for viewing programs
+        if self.action in ['list', 'retrieve']:
+            return []
+        # Require admin permissions for creating, updating, deleting
+        return [permissions.IsAuthenticated()]
+    
+    def get_queryset(self):
+        # Public users can only see active programs
+        if not self.request.user.is_authenticated or self.request.user.role != 'admin':
+            return Program.objects.filter(is_active=True)
+        # Admins can see all programs
+        return Program.objects.all()
+    
+    def perform_create(self, serializer):
+        # Only admins can create programs
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can create programs.")
+        serializer.save()
+    
+    def perform_update(self, serializer):
+        # Only admins can update programs
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can update programs.")
+        serializer.save()
+    
+    def perform_destroy(self, instance):
+        # Only admins can delete programs
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can delete programs.")
+        instance.delete()
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -43,23 +77,25 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             return ApplicationUpdateSerializer
         return ApplicationSerializer
     
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        application = serializer.save()
+        
+        # Return the application serialized with full details including ID
+        response_serializer = ApplicationSerializer(application, context={'request': request})
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+    
     def perform_create(self, serializer):
-        try:
-            user = self.get_serializer_context()['request'].user
-            print(f"Serializer validated_data: {serializer.validated_data}")
-            application = Application.objects.create(applicant=user, **serializer.validated_data)
-            ApplicationStatusHistory.objects.create(
-                application=application,
-                status='pending',
-                changed_by=user,
-                notes='Application submitted'
-            )
-            return application
-        except Exception as e:
-            print(f"Application creation error: {str(e)}")
-            print(f"Validated data: {serializer.validated_data}")
-            print(f"Serializer errors: {serializer.errors}")
-            raise
+        user = self.get_serializer_context()['request'].user
+        application = Application.objects.create(applicant=user, **serializer.validated_data)
+        ApplicationStatusHistory.objects.create(
+            application=application,
+            status='pending',
+            changed_by=user,
+            notes='Application submitted'
+        )
+        return application
     
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def my_applications(self, request):

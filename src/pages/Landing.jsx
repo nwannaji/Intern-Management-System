@@ -73,7 +73,7 @@ const Landing = () => {
             </div>
             <div className="flex items-center space-x-4">
               <Link
-                to="/login"
+                to="/auth"
                 className="text-white hover:text-blue-200 transition-colors"
               >
                 Login

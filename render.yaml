@@ -1,0 +1,39 @@
+services:
+  # Backend Django Service
+  - type: web
+    name: intern-management-backend
+    env: python
+    plan: free
+    buildCommand: |
+      cd backend
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: |
+      cd backend
+      gunicorn intern_management.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12
+      - key: DJANGO_SETTINGS_MODULE
+        value: intern_management.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+    autoDeploy: true
+    
+  # Frontend React Service
+  - type: web
+    name: intern-management-frontend
+    env: static
+    plan: free
+    buildCommand: |
+      npm install
+      npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        value: https://intern-management-backend.onrender.com/api
+      - key: REACT_APP_MEDIA_URL
+        value: https://intern-management-backend.onrender.com/media
+    autoDeploy: true

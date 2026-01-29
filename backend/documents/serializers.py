@@ -61,8 +61,9 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         application_id = self.context.get('application_id')
         document_type = attrs.get('document_type')
         
-        if Document.objects.filter(application_id=application_id, document_type=document_type).exists():
-            raise serializers.ValidationError("A document of this type has already been uploaded for this application")
+        # Check if any document already exists for this application (either/or logic)
+        if Document.objects.filter(application_id=application_id).exists():
+            raise serializers.ValidationError("A document has already been uploaded for this application. Please remove the existing document first.")
         
         file_obj = attrs.get('file')
         if file_obj and document_type:

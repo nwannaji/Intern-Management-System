@@ -15,100 +15,84 @@ const ApplicationDetail = () => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    fetchApplication();
-    fetchDocuments();
+    if (id) {
+      fetchApplicationDetails();
+    }
   }, [id]);
 
-  const fetchApplication = async () => {
+  const fetchApplicationDetails = async () => {
     try {
-      const response = await applicationsAPI.getApplication(id);
-      setApplication(response.data);
+      setIsLoading(true);
+      
+      // Fetch application and documents in parallel
+      const [applicationResponse, documentsResponse] = await Promise.all([
+        applicationsAPI.getApplication(id),
+        documentsAPI.getApplicationDocuments(id)
+      ]);
+
+      setApplication(applicationResponse.data);
+      setDocuments(documentsResponse.data || []);
+
     } catch (error) {
-      toast.error('Failed to fetch application details');
-      console.error('Error fetching application:', error);
+      console.error('Failed to fetch application details:', error);
+      toast.error('Failed to load application details');
       navigate('/my-applications');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchDocuments = async () => {
-    try {
-      const response = await documentsAPI.getApplicationDocuments(id);
-      console.log('Documents API response:', response);
-      console.log('Response data:', response.data);
-      
-      // Ensure documents is always an array
-      let documentsData = response.data;
-      if (Array.isArray(documentsData)) {
-        setDocuments(documentsData);
-      } else {
-        console.warn('Documents response is not an array:', documentsData);
-        setDocuments([]);
-      }
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      setDocuments([]); // Ensure documents is always an array
-    }
-  };
-
   const handleStatusUpdate = async (newStatus) => {
+    if (!isAdmin) return;
+
     setIsUpdating(true);
     try {
       await applicationsAPI.updateApplication(id, { status: newStatus });
-      await fetchApplication();
-      toast.success(`Application ${newStatus} successfully`);
+      await fetchApplicationDetails(); // Refresh data
+      toast.success(`Application ${newStatus.replace('_', ' ')} successfully`);
     } catch (error) {
+      console.error('Failed to update application status:', error);
       toast.error('Failed to update application status');
-      console.error('Error updating application:', error);
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDocumentVerify = async (documentId, isVerified) => {
+    if (!isAdmin) return;
+
     try {
       if (isVerified) {
         await documentsAPI.verifyDocument(documentId);
       } else {
         await documentsAPI.unverifyDocument(documentId);
       }
-      await fetchDocuments();
+      await fetchApplicationDetails(); // Refresh data
       toast.success(`Document ${isVerified ? 'verified' : 'unverified'} successfully`);
     } catch (error) {
+      console.error('Failed to update document status:', error);
       toast.error('Failed to update document status');
-      console.error('Error updating document:', error);
     }
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'under_review':
-        return 'bg-blue-100 text-blue-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      under_review: 'bg-blue-100 text-blue-800',
+      approved: 'bg-green-100 text-green-800',
+      rejected: 'bg-red-100 text-red-800',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const getStatusText = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'Pending';
-      case 'under_review':
-        return 'Under Review';
-      case 'approved':
-        return 'Approved';
-      case 'rejected':
-        return 'Rejected';
-      default:
-        return status;
-    }
+    const texts = {
+      pending: 'Pending',
+      under_review: 'Under Review',
+      approved: 'Approved',
+      rejected: 'Rejected',
+    };
+    return texts[status] || status;
   };
 
   const formatDate = (dateString) => {
@@ -168,10 +152,10 @@ const ApplicationDetail = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {application.program_name}
+                  {application.program_name || 'Program Application'}
                 </h1>
                 <p className="mt-1 text-gray-600">
-                  {application.applicant_name} • {application.applicant_email}
+                  {application.applicant_name || 'Applicant'} • {application.applicant_email || 'Email'}
                 </p>
               </div>
               <div className="text-right">
@@ -191,14 +175,14 @@ const ApplicationDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Application Details */}
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Cover Letter */}
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Cover Letter</h2>
               <div className="prose max-w-none">
                 <p className="whitespace-pre-wrap text-gray-700">
-                  {application.cover_letter}
+                  {application.cover_letter || 'No cover letter provided'}
                 </p>
               </div>
             </div>
@@ -208,7 +192,7 @@ const ApplicationDetail = () => {
               <h2 className="text-lg font-medium text-gray-900 mb-4">Why Interested</h2>
               <div className="prose max-w-none">
                 <p className="whitespace-pre-wrap text-gray-700">
-                  {application.why_interested}
+                  {application.why_interested || 'No response provided'}
                 </p>
               </div>
             </div>
@@ -218,7 +202,7 @@ const ApplicationDetail = () => {
               <h2 className="text-lg font-medium text-gray-900 mb-4">Skills and Experience</h2>
               <div className="prose max-w-none">
                 <p className="whitespace-pre-wrap text-gray-700">
-                  {application.skills_and_experience}
+                  {application.skills_and_experience || 'No response provided'}
                 </p>
               </div>
             </div>
@@ -260,43 +244,11 @@ const ApplicationDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Application Info */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Application Information</h2>
-              <dl className="space-y-3">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Program Type</dt>
-                  <dd className="text-sm text-gray-900">
-                    {application.program_type === 'IT' ? 'Industrial Training' : 'NYSC'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Availability Start Date</dt>
-                  <dd className="text-sm text-gray-900">
-                    {new Date(application.availability_start_date).toLocaleDateString()}
-                  </dd>
-                </div>
-                {application.reviewed_at && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Reviewed On</dt>
-                    <dd className="text-sm text-gray-900">
-                      {formatDate(application.reviewed_at)}
-                    </dd>
-                  </div>
-                )}
-                {application.admin_notes && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Admin Notes</dt>
-                    <dd className="text-sm text-gray-900">
-                      {application.admin_notes}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-
-              {/* Admin Actions */}
-              {isAdmin && (
-                <div className="mt-6 space-y-2">
+            {/* Admin Actions */}
+            {isAdmin && (
+              <div className="bg-white shadow rounded-lg p-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Admin Actions</h2>
+                <div className="space-y-3">
                   {application.status !== 'approved' && (
                     <button
                       onClick={() => handleStatusUpdate('approved')}
@@ -325,26 +277,35 @@ const ApplicationDetail = () => {
                     </button>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Documents */}
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Uploaded Documents</h2>
-              {documents && documents.length === 0 ? (
+              
+              {documents.length === 0 ? (
                 <p className="text-sm text-gray-500">No documents uploaded</p>
               ) : (
                 <div className="space-y-3">
-                  {documents && documents.map((document) => (
+                  {documents.map((document) => (
                     <div key={document.id} className="border border-gray-200 rounded-md p-3">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">
-                            {document.document_type_name}
+                            {document.document_type_name || 'Document'}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {document.file_name} • {formatFileSize(document.file_size)}
+                            {document.file_name || 'Unknown file'} • {formatFileSize(document.file_size || 0)}
                           </p>
+                          <p className="text-xs text-gray-400">
+                            Uploaded: {document.uploaded_at ? formatDate(document.uploaded_at) : 'Unknown date'}
+                          </p>
+                          {document.is_verified && (
+                            <p className="text-xs text-green-600 font-medium">
+                              ✓ Verified
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center space-x-2">
                           {document.file_url && (

@@ -49,12 +49,31 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.action == 'create':
-            application_id = self.request.data.get('application_id') or self.kwargs.get('application_pk')
+            # Safely get application_id from request data
+            application_id = None
+            if hasattr(self.request, 'data') and self.request.data:
+                application_id = self.request.data.get('application_id')
+            if not application_id:
+                application_id = self.kwargs.get('application_pk')
             context['application_id'] = application_id
         return context
     
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        document = serializer.save()
+        
+        # Return the document serialized with full details
+        response_serializer = DocumentSerializer(document, context={'request': request})
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+    
     def perform_create(self, serializer):
-        application_id = self.request.data.get('application_id') or self.kwargs.get('application_pk')
+        # Safely get application_id from request data
+        application_id = None
+        if hasattr(self.request, 'data') and self.request.data:
+            application_id = self.request.data.get('application_id')
+        if not application_id:
+            application_id = self.kwargs.get('application_pk')
         serializer.save(application_id=application_id)
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])

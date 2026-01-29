@@ -123,7 +123,7 @@ const Register = () => {
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
             <Link
-              to="/login"
+              to="/auth"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               sign in to your existing account

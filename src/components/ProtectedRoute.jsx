@@ -25,9 +25,8 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   }
 
   if (!isAuthenticated) {
-    const loginPath = requireAdmin ? "/auth" : "/login";
-    console.log('Redirecting to login:', loginPath);
-    return <Navigate to={loginPath} state={{ from: location }} replace />;
+    console.log('Redirecting to login: /auth');
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {
