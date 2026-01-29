@@ -16,7 +16,7 @@
     }
   ],
   "env": {
-    "REACT_APP_API_BASE_URL": "@api_base_url",
-    "REACT_APP_MEDIA_URL": "@media_url"
+    "REACT_APP_API_BASE_URL": "https://intern-management-backend.onrender.com/api",
+    "REACT_APP_MEDIA_URL": "https://intern-management-backend.onrender.com/media"
   }
 }
