@@ -9,6 +9,53 @@ from .serializers import UserSerializer, RegistrationSerializer, LoginSerializer
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
+def debug_auth(request):
+    """Debug authentication issues"""
+    try:
+        from django.contrib.auth import authenticate
+        from .models import User
+        
+        email = 'edenwannaji1980@gmail.com'
+        password = '@admin123'
+        
+        # Check if user exists
+        try:
+            user = User.objects.get(email=email)
+            user_info = {
+                'exists': True,
+                'email': user.email,
+                'is_active': user.is_active,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'username': user.username,
+                'password_check': user.check_password(password)
+            }
+        except User.DoesNotExist:
+            user_info = {'exists': False}
+        
+        # Test authentication
+        auth_user = authenticate(username=email, password=password)
+        auth_result = {
+            'authenticated': auth_user is not None,
+            'auth_user_email': auth_user.email if auth_user else None
+        }
+        
+        return Response({
+            'user_info': user_info,
+            'auth_result': auth_result,
+            'credentials_tested': {
+                'email': email,
+                'password': password
+            }
+        })
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
 def create_test_user(request):
     """Create a test user for development"""
     try:
