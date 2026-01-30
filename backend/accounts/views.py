@@ -232,15 +232,60 @@ def simple_register(request):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):
-    serializer = RegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
+    """Registration endpoint with simple implementation"""
+    try:
+        from django.contrib.auth import get_user_model
+        from rest_framework.authtoken.models import Token
+        
+        User = get_user_model()
+        
+        email = request.data.get('email')
+        password = request.data.get('password')
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
+        username = request.data.get('username', email.split('@')[0] if email else '')
+        
+        if not email or not password:
+            return Response({
+                'error': 'Email and password are required'
+            }, status=400)
+        
+        # Check if user already exists
+        if User.objects.filter(email=email).exists():
+            return Response({
+                'error': 'User with this email already exists'
+            }, status=400)
+        
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role='intern'
+        )
+        
+        # Create token
         token, created = Token.objects.get_or_create(user=user)
+        
         return Response({
-            'user': UserSerializer(user).data,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+                'username': user.username
+            },
             'token': token.key
         }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'debug': 'Registration failed'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
