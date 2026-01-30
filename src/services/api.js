@@ -115,7 +115,7 @@ const handleResponse = (response) => {
 
 // Auth services with better error handling
 export const authAPI = {
-  register: (userData) => api.post('/auth/register/', userData).then(handleResponse),
+  register: (userData) => api.post('/auth/simple-register/', userData).then(handleResponse),
   login: (credentials) => api.post('/auth/simple-login/', credentials).then(handleResponse),
   logout: () => api.post('/auth/logout/').then(handleResponse),
   getProfile: () => api.get('/auth/profile/').then(handleResponse),
