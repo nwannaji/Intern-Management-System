@@ -148,6 +148,67 @@ def create_test_user(request):
         }, status=400)
 
 
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def register_admin(request):
+    """Register a new admin user"""
+    try:
+        from django.contrib.auth import get_user_model
+        from rest_framework.authtoken.models import Token
+        
+        User = get_user_model()
+        
+        email = request.data.get('email')
+        password = request.data.get('password')
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
+        username = request.data.get('username', email.split('@')[0] if email else '')
+        
+        if not email or not password:
+            return Response({
+                'error': 'Email and password are required'
+            }, status=400)
+        
+        # Check if user already exists
+        if User.objects.filter(email=email).exists():
+            return Response({
+                'error': 'User with this email already exists'
+            }, status=400)
+        
+        # Create admin user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role='admin'  # Set role to admin
+        )
+        
+        # Create token
+        token, created = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'success': True,
+            'message': 'Admin user created successfully',
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+                'username': user.username
+            },
+            'token': token.key
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'debug': 'Admin registration failed'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def create_sample_programs(request):
