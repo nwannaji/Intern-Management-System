@@ -16,7 +16,7 @@
     }
   ],
   "env": {
-    "REACT_APP_API_BASE_URL": "https://intern-management-backend-gi46.onrender.com/api",
-    "REACT_APP_MEDIA_URL": "https://intern-management-backend-gi46.onrender.com/media"
+    "VITE_API_BASE_URL": "https://intern-management-backend-gi46.onrender.com/api",
+    "VITE_MEDIA_URL": "https://intern-management-backend-gi46.onrender.com/media"
   }
 }

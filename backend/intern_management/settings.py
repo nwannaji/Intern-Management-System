@@ -126,14 +126,15 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:54162",
-    "http://localhost:5174",
+    "http://172.16.2.78:5174",
+    "https://intern-management-app-nwannaji.vercel.app",
+    "https://*.vercel.app",
     "http://127.0.0.1:5174",
     "http://localhost:5175",
     "http://127.0.0.1:5175",
     "http://127.0.0.1:59484",
     "http://localhost:59484",
     "http://127.0.0.1:51302",
-    "http://172.16.2.78:5174",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

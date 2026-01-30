@@ -82,7 +82,7 @@ const ApplyPage = () => {
 
   const fetchDocumentTypes = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/document-types/');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://intern-management-backend-gi46.onrender.com/api'}/document-types/`);
       const data = await response.json();
       setDocumentTypes(data);
     } catch (error) {
