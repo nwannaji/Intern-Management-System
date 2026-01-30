@@ -18,5 +18,6 @@ export default defineConfig({
         manualChunks: undefined
       }
     }
-  }
+  },
+  base: '/'
 })
