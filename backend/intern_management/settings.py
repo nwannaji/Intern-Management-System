@@ -85,6 +85,17 @@ if not config('DB_HOST', default='localhost') or config('DB_HOST', default='loca
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+    
+    # Run migrations automatically for SQLite
+    import os
+    if 'RUN_MAIN' in os.environ:  # Only run during server startup
+        import django
+        from django.core.management import call_command
+        try:
+            call_command('migrate', verbosity=0, interactive=False)
+            call_command('create_admin_user', verbosity=0)
+        except:
+            pass
 
 AUTH_PASSWORD_VALIDATORS = [
     {
