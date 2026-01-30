@@ -130,6 +130,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:54162",
     "http://172.16.2.78:5174",
     "https://intern-management-app-nwannaji.vercel.app",
+    "https://intern-management-system-three.vercel.app",
     "https://*.vercel.app",
     "http://127.0.0.1:5174",
     "http://localhost:5175",
