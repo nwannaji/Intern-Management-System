@@ -123,6 +123,9 @@ export const authAPI = {
   changePassword: (passwordData) => api.post('/auth/change-password/', passwordData).then(handleResponse),
 };
 
+// Debug: Log which endpoint is being used
+console.log('AuthAPI configured with simple-register endpoint');
+
 // Programs services
 export const programsAPI = {
   getPrograms: () => api.get('/programs/').then(handleResponse),
