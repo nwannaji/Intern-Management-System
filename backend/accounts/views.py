@@ -7,6 +7,55 @@ from .models import User, Profile
 from .serializers import UserSerializer, RegistrationSerializer, LoginSerializer, PasswordChangeSerializer, ProfileSerializer
 
 
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def simple_login(request):
+    """Simple login endpoint for debugging"""
+    try:
+        from django.contrib.auth import authenticate
+        from rest_framework.authtoken.models import Token
+        
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        if not email or not password:
+            return Response({
+                'error': 'Email and password are required'
+            }, status=400)
+        
+        # Authenticate user
+        user = authenticate(username=email, password=password)
+        
+        if user:
+            # Get or create token
+            token, created = Token.objects.get_or_create(user=user)
+            
+            return Response({
+                'success': True,
+                'token': token.key,
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'role': user.role,
+                    'is_staff': user.is_staff,
+                    'is_superuser': user.is_superuser
+                }
+            })
+        else:
+            return Response({
+                'error': 'Invalid credentials',
+                'debug': 'Authentication failed'
+            }, status=400)
+            
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'debug': 'Exception occurred'
+        }, status=500)
+
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def debug_auth(request):
