@@ -108,6 +108,10 @@ def debug_auth(request):
 def create_test_user(request):
     """Create a test user for development"""
     try:
+        # First, ensure database tables exist
+        from django.core.management import call_command
+        call_command('migrate', verbosity=0, interactive=False)
+        
         user, created = User.objects.get_or_create(
             email='edenwannaji1980@gmail.com',
             defaults={
@@ -122,22 +126,25 @@ def create_test_user(request):
             user.set_password('@admin123')
             user.save()
             return Response({
-                'message': 'Test user created successfully',
+                'message': 'Test user created successfully in PostgreSQL',
                 'email': 'edenwannaji1980@gmail.com',
-                'password': '@admin123'
+                'password': '@admin123',
+                'database': 'PostgreSQL'
             })
         else:
             # Update password for existing user
             user.set_password('@admin123')
             user.save()
             return Response({
-                'message': 'Test user password updated',
+                'message': 'Test user password updated in PostgreSQL',
                 'email': 'edenwannaji1980@gmail.com',
-                'password': '@admin123'
+                'password': '@admin123',
+                'database': 'PostgreSQL'
             })
     except Exception as e:
         return Response({
-            'error': str(e)
+            'error': str(e),
+            'database': 'PostgreSQL connection failed'
         }, status=400)
 
 
