@@ -131,6 +131,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://172.16.2.78:5174",
     "https://intern-management-app-nwannaji.vercel.app",
     "https://intern-management-system-three.vercel.app",
+    "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
     "https://*.vercel.app",
     "http://127.0.0.1:5174",
     "http://localhost:5175",
@@ -141,6 +142,31 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Allow all origins for development (remove in production)
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# Additional CORS settings
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
