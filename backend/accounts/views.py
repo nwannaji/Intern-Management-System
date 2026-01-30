@@ -148,6 +148,28 @@ def create_test_user(request):
         }, status=400)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def create_sample_programs(request):
+    """Create sample programs using the management command"""
+    try:
+        from django.core.management import call_command
+        
+        # Run the create_sample_programs management command
+        call_command('create_sample_programs', verbosity=1)
+        
+        return Response({
+            'success': True,
+            'message': 'Sample programs created successfully in production database'
+        })
+        
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'debug': 'Failed to create sample programs'
+        }, status=500)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):
