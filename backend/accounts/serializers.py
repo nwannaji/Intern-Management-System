@@ -31,6 +31,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
             'password_confirm': {'write_only': True},
+            'date_of_birth': {'required': False, 'allow_null': True},
+            'phone_number': {'required': False, 'allow_blank': True},
+            'address': {'required': False, 'allow_blank': True},
         }
     
     def validate(self, attrs):
@@ -39,9 +42,20 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return attrs
     
     def validate_date_of_birth(self, value):
-        if value:
-            # Temporarily skip validation to test
-            return value
+        if value and isinstance(value, str):
+            # Handle string date format from frontend
+            try:
+                from datetime import datetime
+                # Try different date formats
+                for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']:
+                    try:
+                        return datetime.strptime(value, fmt).date()
+                    except ValueError:
+                        continue
+                # If no format matches, raise error
+                raise serializers.ValidationError("Date format not recognized. Use YYYY-MM-DD format.")
+            except Exception:
+                raise serializers.ValidationError("Invalid date format. Use YYYY-MM-DD format.")
         return value
     
     def create(self, validated_data):
