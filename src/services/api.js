@@ -18,18 +18,9 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Token ${token}`;
     }
-    
-    // Log request for debugging
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-      data: config.data,
-      params: config.params,
-      headers: config.headers
-    });
-    
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -37,8 +28,7 @@ api.interceptors.request.use(
 // Response interceptor with comprehensive error handling
 api.interceptors.response.use(
   (response) => {
-    // Log successful response
-    console.log(`API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+    console.log('API Response Success:', {
       status: response.status,
       data: response.data
     });
@@ -126,7 +116,7 @@ const handleResponse = (response) => {
 // Auth services with better error handling
 export const authAPI = {
   register: (userData) => api.post('/auth/register/', userData).then(handleResponse),
-  login: (credentials) => api.post('/auth/login/', credentials).then(handleResponse),
+  login: (credentials) => api.post('/auth/simple-login/', credentials).then(handleResponse),
   logout: () => api.post('/auth/logout/').then(handleResponse),
   getProfile: () => api.get('/auth/profile/').then(handleResponse),
   updateProfile: (userData) => api.put('/auth/profile/', userData).then(handleResponse),
