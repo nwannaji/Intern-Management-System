@@ -211,6 +211,28 @@ def register_admin(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
+def create_sample_document_types(request):
+    """Create sample document types using the management command"""
+    try:
+        from django.core.management import call_command
+        
+        # Run the create_sample_document_types management command
+        call_command('create_sample_document_types', verbosity=1)
+        
+        return Response({
+            'success': True,
+            'message': 'Sample document types created successfully in production database'
+        })
+        
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'debug': 'Failed to create sample document types'
+        }, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
 def create_sample_programs(request):
     """Create sample programs using the management command"""
     try:
