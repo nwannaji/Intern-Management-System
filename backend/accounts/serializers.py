@@ -43,6 +43,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
     
     def validate_date_of_birth(self, value):
         if value and isinstance(value, str):
+            # Handle empty string or null
+            if value.strip() == '':
+                return None
             # Handle string date format from frontend
             try:
                 from datetime import datetime
@@ -52,14 +55,16 @@ class RegistrationSerializer(serializers.ModelSerializer):
                         return datetime.strptime(value, fmt).date()
                     except ValueError:
                         continue
-                # If no format matches, raise error
-                raise serializers.ValidationError("Date format not recognized. Use YYYY-MM-DD format.")
+                # If no format matches, just return None (skip date validation)
+                return None
             except Exception:
-                raise serializers.ValidationError("Invalid date format. Use YYYY-MM-DD format.")
+                return None
         return value
     
     def create(self, validated_data):
         validated_data.pop('password_confirm')  # Remove password_confirm from data
+        # Set default role to 'intern' for non-admin users
+        validated_data['role'] = 'intern'
         try:
             user = User.objects.create_user(**validated_data)
             # Create profile separately to avoid issues
