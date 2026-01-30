@@ -7,7 +7,9 @@ SECRET_KEY = config('SECRET_KEY', default='cze+g6yznek*hed5rn^qjhw=^-86im!8^fo*f
 
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'testserver', '.onrender.com', 'intern-management-backend-gi46.onrender.com']
+# Get allowed hosts from environment variable or use defaults
+import os
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com,intern-management-backend-gi46.onrender.com').split(',')
 
 DJANGO_APPS = [
     'django.contrib.admin',
