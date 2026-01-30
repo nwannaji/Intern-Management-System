@@ -148,6 +148,28 @@ def create_test_user(request):
         }, status=400)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def run_migrations(request):
+    """Run database migrations"""
+    try:
+        from django.core.management import call_command
+        
+        # Run migrations
+        call_command('migrate', verbosity=1, interactive=False)
+        
+        return Response({
+            'success': True,
+            'message': 'Database migrations completed successfully'
+        })
+        
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'debug': 'Migration failed'
+        }, status=500)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def simple_register(request):
