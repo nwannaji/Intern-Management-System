@@ -7,6 +7,44 @@ from .models import User, Profile
 from .serializers import UserSerializer, RegistrationSerializer, LoginSerializer, PasswordChangeSerializer, ProfileSerializer
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def create_test_user(request):
+    """Create a test user for development"""
+    try:
+        user, created = User.objects.get_or_create(
+            email='edenwannaji1980@gmail.com',
+            defaults={
+                'first_name': 'Henry',
+                'last_name': 'Nwatu',
+                'is_staff': True,
+                'is_superuser': True,
+            }
+        )
+        
+        if created:
+            user.set_password('@admin123')
+            user.save()
+            return Response({
+                'message': 'Test user created successfully',
+                'email': 'edenwannaji1980@gmail.com',
+                'password': '@admin123'
+            })
+        else:
+            # Update password for existing user
+            user.set_password('@admin123')
+            user.save()
+            return Response({
+                'message': 'Test user password updated',
+                'email': 'edenwannaji1980@gmail.com',
+                'password': '@admin123'
+            })
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=400)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):
