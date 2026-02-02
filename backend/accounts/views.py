@@ -7,6 +7,78 @@ from .models import User, Profile
 from .serializers import UserSerializer, RegistrationSerializer, LoginSerializer, PasswordChangeSerializer, ProfileSerializer
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def ensure_test_user(request):
+    """Ensure test user exists with correct credentials"""
+    try:
+        from django.contrib.auth import authenticate
+        from django.contrib.auth import get_user_model
+        from rest_framework.authtoken.models import Token
+        
+        User = get_user_model()
+        
+        # Create or update test user
+        user, created = User.objects.get_or_create(
+            email='edenwannaji1980@gmail.com',
+            defaults={
+                'username': 'edenwannaji1980',
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'role': 'admin',
+                'is_staff': True,
+                'is_superuser': True,
+                'is_active': True,
+            }
+        )
+        
+        if created:
+            user.set_password('@admin123')
+            user.save()
+            message = 'Test user created successfully'
+        else:
+            # Update password and ensure active
+            user.set_password('@admin123')
+            user.is_active = True
+            user.save()
+            message = 'Test user updated successfully'
+        
+        # Test authentication
+        auth_user = authenticate(username='edenwannaji1980@gmail.com', password='@admin123')
+        
+        # Get or create token
+        token, token_created = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'success': True,
+            'message': message,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+                'is_active': user.is_active,
+                'is_staff': user.is_staff,
+            },
+            'auth_test': {
+                'can_authenticate': auth_user is not None,
+                'token': token.key,
+                'token_created': token_created
+            },
+            'credentials': {
+                'email': 'edenwannaji1980@gmail.com',
+                'password': '@admin123'
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'debug': 'Failed to ensure test user'
+        }, status=500)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def simple_login(request):
