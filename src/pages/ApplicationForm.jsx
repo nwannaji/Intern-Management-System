@@ -529,27 +529,7 @@ const ApplicationForm = () => {
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Documents</h2>
               
-              {/* Document Types Loading/Error Status */}
-              {documentTypes.length === 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-yellow-800">
-                      {isLoading ? 'Loading document requirements...' : 'Document requirements are being configured. You can still upload your document.'}
-                    </p>
-                    {!isLoading && (
-                      <button
-                        type="button"
-                        onClick={fetchDocumentTypes}
-                        className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
-                      >
-                        Reload Document Types
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-                
-              {/* Single Upload Area */}
+              {/* Single Upload Area - Always Visible */}
               <div
                 className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-6 ${
                   dragOver.global
