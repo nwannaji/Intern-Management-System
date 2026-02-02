@@ -134,6 +134,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://intern-management-system-three.vercel.app",
     "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
     "https://intern-management-system-5q9u.vercel.app",
+    "https://intern-management-system-5q9u-4bopiaod8.vercel.app",
     "https://*.vercel.app",
     "http://127.0.0.1:5174",
     "http://localhost:5175",
@@ -166,6 +167,7 @@ CORS_ORIGIN_WHITELIST = [
     "https://intern-management-system-three.vercel.app", 
     "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
     "https://intern-management-system-5q9u.vercel.app",
+    "https://intern-management-system-5q9u-4bopiaod8.vercel.app",
 ]
 
 # Additional CORS settings
