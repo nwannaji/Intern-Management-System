@@ -72,6 +72,8 @@ const ApplicationForm = () => {
       const types = Array.isArray(response.data) ? response.data : [];
       setDocumentTypes(types);
       
+      console.log('Loaded document types:', types); // Debug log
+      
       if (types.length === 0) {
         console.warn('No document types available');
         toast.warning('No document types configured');
@@ -156,18 +158,30 @@ const ApplicationForm = () => {
     // If no match found, use the first available document type
     if (!matchedDocType && documentTypes.length > 0) {
       matchedDocType = documentTypes[0];
+      console.log(`No filename match for ${fileToProcess.name}, using first available document type: ${matchedDocType.name}`);
     }
     
-    if (matchedDocType) {
-      const errors = validateFile(fileToProcess, matchedDocType);
-      if (errors.length === 0) {
-        setUploadedFiles({ [matchedDocType.id]: fileToProcess });
-        toast.success(`${fileToProcess.name} assigned to ${matchedDocType.name}`);
+    // If still no match found and document types are empty, show a more helpful error
+    if (!matchedDocType) {
+      if (documentTypes.length === 0) {
+        toast.error(`Document types are still loading. Please try again in a moment.`, {
+          autoClose: 5000,
+        });
       } else {
-        errors.forEach(error => toast.error(`${fileToProcess.name}: ${error}`));
+        toast.error(`Unable to categorize ${fileToProcess.name}. Please ensure it's a School Recommendation Letter or NYSC Orientation Camp Letter.`, {
+          autoClose: 5000,
+        });
       }
+      return;
+    }
+    
+    // Validate and upload the file
+    const errors = validateFile(fileToProcess, matchedDocType);
+    if (errors.length === 0) {
+      setUploadedFiles({ [matchedDocType.id]: fileToProcess });
+      toast.success(`${fileToProcess.name} assigned to ${matchedDocType.name}`);
     } else {
-      toast.error(`No document type available for ${fileToProcess.name}`);
+      errors.forEach(error => toast.error(`${fileToProcess.name}: ${error}`));
     }
     
     // Reset the input value to allow selecting the same files again
@@ -484,9 +498,20 @@ const ApplicationForm = () => {
               {/* Document Types Loading/Error Status */}
               {documentTypes.length === 0 && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-yellow-800">
-                    {isLoading ? 'Loading document requirements...' : 'Document requirements are being configured. You can still upload your document.'}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-yellow-800">
+                      {isLoading ? 'Loading document requirements...' : 'Document requirements are being configured. You can still upload your document.'}
+                    </p>
+                    {!isLoading && (
+                      <button
+                        type="button"
+                        onClick={fetchDocumentTypes}
+                        className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                      >
+                        Reload Document Types
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
                 
