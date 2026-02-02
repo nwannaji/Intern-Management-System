@@ -478,49 +478,58 @@ const ApplicationForm = () => {
             </div>
 
             {/* Documents Section */}
-            {documentTypes.length > 0 && (
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Documents</h2>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Documents</h2>
+              
+              {/* Document Types Loading/Error Status */}
+              {documentTypes.length === 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-yellow-800">
+                    {isLoading ? 'Loading document requirements...' : 'Document requirements are being configured. You can still upload your document.'}
+                  </p>
+                </div>
+              )}
                 
-                {/* Single Upload Area */}
-                <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-6 ${
-                    dragOver.global
-                      ? 'border-blue-400 bg-blue-50'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <div className="space-y-4">
-                    <div className="text-gray-400">
-                      <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                    </div>
-                    <div>
-                      <label className="cursor-pointer">
-                        <span className="text-blue-600 hover:text-blue-500 font-medium">
-                          Browse Files
-                        </span>
-                        <span className="text-gray-600"> or drag and drop</span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={handleMultipleFileChange}
-                          multiple
-                          accept={ALLOWED_EXTENSIONS.join(',')}
-                        />
-                      </label>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Supported formats: {ALLOWED_EXTENSIONS.join(', ')} • Max size: {formatFileSize(MAX_FILE_SIZE)}
-                      </p>
-                    </div>
+              {/* Single Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-6 ${
+                  dragOver.global
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <div className="space-y-4">
+                  <div className="text-gray-400">
+                    <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <label className="cursor-pointer">
+                      <span className="text-blue-600 hover:text-blue-500 font-medium">
+                        Browse Files
+                      </span>
+                      <span className="text-gray-600"> or drag and drop</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={handleMultipleFileChange}
+                        multiple
+                        accept={ALLOWED_EXTENSIONS.join(',')}
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Supported formats: {ALLOWED_EXTENSIONS.join(', ')} • Max size: {formatFileSize(MAX_FILE_SIZE)}
+                    </p>
                   </div>
                 </div>
+              </div>
 
-                {/* Document Requirements Info */}
+              {/* Document Requirements Info - Only show if document types are loaded */}
+              {documentTypes.length > 0 && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <h3 className="text-sm font-medium text-blue-900 mb-3">Document Requirements:</h3>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
@@ -561,51 +570,51 @@ const ApplicationForm = () => {
                     </p>
                   </div>
                 </div>
+              )}
 
-                {/* Uploaded Files List */}
-                {Object.keys(uploadedFiles).length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-medium text-gray-900">Uploaded Document</h3>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800 mb-2">
-                        ✅ Document uploaded successfully. You can replace it by uploading a new file.
-                      </p>
-                    </div>
-                    {Object.entries(uploadedFiles).map(([documentTypeId, file]) => {
-                      const docType = documentTypes.find(dt => dt.id === parseInt(documentTypeId));
-                      return (
-                        <div key={documentTypeId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="flex items-center space-x-3">
-                            <div className="text-blue-600">
-                              <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {formatFileSize(file.size)} • Type: {docType?.name || 'Unknown'}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeFile(documentTypeId)}
-                            className="text-red-600 hover:text-red-500"
-                          >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      );
-                    })}
+              {/* Uploaded Files List */}
+              {Object.keys(uploadedFiles).length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-medium text-gray-900">Uploaded Document</h3>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-sm text-green-800 mb-2">
+                      ✅ Document uploaded successfully. You can replace it by uploading a new file.
+                    </p>
                   </div>
-                )}
-              </div>
-            )}
+                  {Object.entries(uploadedFiles).map(([documentTypeId, file]) => {
+                    const docType = documentTypes.find(dt => dt.id === parseInt(documentTypeId));
+                    return (
+                      <div key={documentTypeId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center space-x-3">
+                          <div className="text-blue-600">
+                            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatFileSize(file.size)} • Type: {docType?.name || 'Unknown'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(documentTypeId)}
+                          className="text-red-600 hover:text-red-500"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Submit Button */}
             <div className="flex justify-end space-x-4">
