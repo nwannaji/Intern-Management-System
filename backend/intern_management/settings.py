@@ -36,8 +36,9 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'intern_management.middleware.DynamicCorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -132,6 +133,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://intern-management-app-nwannaji.vercel.app",
     "https://intern-management-system-three.vercel.app",
     "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
+    "https://intern-management-system-5q9u.vercel.app",
     "https://*.vercel.app",
     "http://127.0.0.1:5174",
     "http://localhost:5175",
@@ -145,6 +147,26 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Allow all origins for development (remove in production)
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# Custom CORS middleware to handle dynamic Vercel origins
+def is_vercel_origin(origin):
+    """Check if origin is a Vercel deployment"""
+    if not origin:
+        return False
+    return (
+        'vercel.app' in origin or 
+        origin.endswith('.vercel.app') or
+        'localhost' in origin or
+        '127.0.0.1' in origin
+    )
+
+# Custom CORS whitelist
+CORS_ORIGIN_WHITELIST = [
+    "https://intern-management-app-nwannaji.vercel.app",
+    "https://intern-management-system-three.vercel.app", 
+    "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
+    "https://intern-management-system-5q9u.vercel.app",
+]
 
 # Additional CORS settings
 CORS_ALLOW_HEADERS = [
