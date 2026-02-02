@@ -18,6 +18,56 @@ def document_types_list(request):
     return JsonResponse(types, safe=False)
 
 
+@require_GET
+def seed_document_types_api(request):
+    """API endpoint to seed document types"""
+    from django.http import JsonResponse
+    
+    try:
+        # Check if document types already exist
+        if DocumentType.objects.count() > 0:
+            return JsonResponse({
+                'status': 'info',
+                'message': f'Document types already exist: {DocumentType.objects.count()} found'
+            })
+        
+        # Create document types
+        school_rec, created = DocumentType.objects.get_or_create(
+            name='School Recommendation Letter',
+            defaults={
+                'description': 'Recommendation letter from your school supporting your application',
+                'is_required': True,
+                'max_file_size': 5242880,  # 5MB
+                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
+            }
+        )
+        
+        nysc_letter, created = DocumentType.objects.get_or_create(
+            name='NYSC Orientation Camp Letter',
+            defaults={
+                'description': 'Letter showing completion of 3 weeks NYSC orientation camp',
+                'is_required': True,
+                'max_file_size': 5242880,  # 5MB
+                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
+            }
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Document types seeded successfully',
+            'types_created': [
+                school_rec.name,
+                nysc_letter.name
+            ]
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Failed to seed document types: {str(e)}'
+        }, status=500)
+
+
 @authentication_classes([])
 @permission_classes([AllowAny])
 class DocumentTypeViewSet(viewsets.ReadOnlyModelViewSet):
