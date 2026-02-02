@@ -36,8 +36,8 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'intern_management.middleware.DynamicCorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -135,6 +135,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
     "https://intern-management-system-5q9u.vercel.app",
     "https://intern-management-system-5q9u-4bopiaod8.vercel.app",
+    "https://intern-management-system-5q9u-1gbhyx1dm.vercel.app",
     "https://*.vercel.app",
     "http://127.0.0.1:5174",
     "http://localhost:5175",
@@ -168,6 +169,7 @@ CORS_ORIGIN_WHITELIST = [
     "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
     "https://intern-management-system-5q9u.vercel.app",
     "https://intern-management-system-5q9u-4bopiaod8.vercel.app",
+    "https://intern-management-system-5q9u-1gbhyx1dm.vercel.app",
 ]
 
 # Additional CORS settings
