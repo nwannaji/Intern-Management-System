@@ -207,3 +207,36 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+
+# Auto-seed document types if they don't exist
+def seed_document_types():
+    from documents.models import DocumentType
+    
+    if DocumentType.objects.count() == 0:
+        DocumentType.objects.get_or_create(
+            name='School Recommendation Letter',
+            defaults={
+                'description': 'Recommendation letter from your school supporting your application',
+                'is_required': True,
+                'max_file_size': 5242880,  # 5MB
+                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
+            }
+        )
+        
+        DocumentType.objects.get_or_create(
+            name='NYSC Orientation Camp Letter',
+            defaults={
+                'description': 'Letter showing completion of 3 weeks NYSC orientation camp',
+                'is_required': True,
+                'max_file_size': 5242880,  # 5MB
+                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
+            }
+        )
+
+# Auto-seed on startup (only in production or when explicitly requested)
+if not DEBUG or config('SEED_DOCUMENT_TYPES', default=False, cast=bool):
+    try:
+        seed_document_types()
+    except Exception:
+        # Silently fail if database is not ready yet
+        pass
