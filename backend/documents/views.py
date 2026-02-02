@@ -14,6 +14,32 @@ from .serializers import DocumentTypeSerializer, DocumentSerializer, DocumentCre
 @require_GET
 def document_types_list(request):
     """Simple view to return document types without authentication"""
+    # Auto-seed if no document types exist
+    if DocumentType.objects.count() == 0:
+        try:
+            DocumentType.objects.get_or_create(
+                name='School Recommendation Letter',
+                defaults={
+                    'description': 'Recommendation letter from your school supporting your application',
+                    'is_required': True,
+                    'max_file_size': 5242880,  # 5MB
+                    'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
+                }
+            )
+            
+            DocumentType.objects.get_or_create(
+                name='NYSC Orientation Camp Letter',
+                defaults={
+                    'description': 'Letter showing completion of 3 weeks NYSC orientation camp',
+                    'is_required': True,
+                    'max_file_size': 5242880,  # 5MB
+                    'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
+                }
+            )
+        except Exception as e:
+            # Log error but continue
+            pass
+    
     types = list(DocumentType.objects.all().values('id', 'name', 'description', 'is_required'))
     return JsonResponse(types, safe=False)
 
