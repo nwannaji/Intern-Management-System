@@ -233,10 +233,8 @@ def seed_document_types():
             }
         )
 
-# Auto-seed on startup (only in production or when explicitly requested)
-if not DEBUG or config('SEED_DOCUMENT_TYPES', default=False, cast=bool):
-    try:
-        seed_document_types()
-    except Exception:
-        # Silently fail if database is not ready yet
-        pass
+# Auto-seed on startup (always run to ensure document types exist)
+try:
+    seed_document_types()
+except Exception as e:
+    print(f"Warning: Could not seed document types: {e}")
