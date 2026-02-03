@@ -132,7 +132,7 @@ const DashboardAuth = () => {
               Sign In
             </h2>
             <p className="text-gray-600 text-lg">
-              Access your Intern Management System account
+              Insert your Intern Management System Login Credentials
             </p>
           </div>
 
