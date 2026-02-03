@@ -65,3 +65,6 @@ venv.bak/
 # IDE
 .vscode/
 .idea/
+
+.vercel
+.env*.local

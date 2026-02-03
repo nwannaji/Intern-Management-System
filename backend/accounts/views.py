@@ -43,9 +43,12 @@ def ensure_test_user(request):
             user.save()
             message = 'Test user created successfully'
         else:
-            # Update password and ensure active
+            # Update password and ensure admin privileges
             user.set_password('@admin123')
             user.is_active = True
+            user.role = 'admin'
+            user.is_staff = True
+            user.is_superuser = True
             user.save()
             message = 'Test user updated successfully'
         
