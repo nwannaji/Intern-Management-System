@@ -123,6 +123,13 @@ export const authAPI = {
   changePassword: (passwordData) => api.post('/auth/change-password/', passwordData).then(handleResponse),
 };
 
+// Accounts services for password reset
+export const accountsAPI = {
+  requestPasswordReset: (emailData) => api.post('/auth/password-reset/', emailData).then(handleResponse),
+  confirmPasswordReset: (resetData) => api.post('/auth/password-reset/confirm/', resetData).then(handleResponse),
+  validateResetToken: (token) => api.get(`/auth/password-reset/validate/${token}/`).then(handleResponse),
+};
+
 // Debug: Log which endpoint is being used
 console.log('AuthAPI configured with refactored register endpoint');
 

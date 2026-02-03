@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
+import uuid
 
 
 class User(AbstractUser):
@@ -21,6 +23,29 @@ class User(AbstractUser):
     
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Password reset token for {self.user.email}"
+    
+    def is_valid(self):
+        """Check if token is valid (not expired and not used)"""
+        return not self.is_used and timezone.now() < self.expires_at
+    
+    def expire(self):
+        """Mark token as used"""
+        self.is_used = True
+        self.save()
 
 
 class Profile(models.Model):

@@ -5,6 +5,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import DashboardAuth from './pages/DashboardAuth';
 import Register from './pages/Register';
+import PasswordReset from './pages/PasswordReset';
+import PasswordResetConfirm from './pages/PasswordResetConfirm';
 import Programs from './pages/Programs';
 import ApplyPage from './pages/ApplyPage';
 import ApplicationForm from './pages/ApplicationForm';
@@ -23,6 +25,8 @@ function App() {
             <Route path="/login" element={<DashboardAuth />} />
             <Route path="/auth" element={<DashboardAuth />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/password-reset" element={<PasswordReset />} />
+            <Route path="/reset-password/:token" element={<PasswordResetConfirm />} />
             <Route path="/programs" element={<Programs />} />
             <Route path="/apply" element={
               <ProtectedRoute>

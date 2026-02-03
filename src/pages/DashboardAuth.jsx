@@ -205,6 +205,16 @@ const DashboardAuth = () => {
               </div>
             </div>
 
+            {/* Forgot Password Link */}
+            <div className="text-center">
+              <Link
+                to="/password-reset"
+                className="text-sm text-blue-600 hover:text-blue-500 transition-colors font-medium"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"

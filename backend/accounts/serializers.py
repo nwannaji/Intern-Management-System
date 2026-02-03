@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, Profile
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import timedelta
+from .models import User, Profile, PasswordResetToken
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -109,4 +112,55 @@ class PasswordChangeSerializer(serializers.Serializer):
         user = self.context['request'].user
         if not user.check_password(value):
             raise serializers.ValidationError("Old password is incorrect")
+        return value
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+            if not user.is_active:
+                raise serializers.ValidationError("This account is not active")
+        except User.DoesNotExist:
+            # Don't reveal if email exists or not for security
+            pass
+        return value
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
+    new_password = serializers.CharField(min_length=8)
+    new_password_confirm = serializers.CharField()
+    
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError("Passwords don't match")
+        
+        token = attrs.get('token')
+        try:
+            reset_token = PasswordResetToken.objects.get(token=token)
+            if not reset_token.is_valid():
+                raise serializers.ValidationError("Invalid or expired reset token")
+        except PasswordResetToken.DoesNotExist:
+            raise serializers.ValidationError("Invalid reset token")
+        
+        attrs['reset_token'] = reset_token
+        return attrs
+    
+    def validate_new_password(self, value):
+        # Add password strength validation
+        if len(value) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+        
+        if not any(c.isdigit() for c in value):
+            raise serializers.ValidationError("Password must contain at least one digit")
+        
+        if not any(c.isupper() for c in value):
+            raise serializers.ValidationError("Password must contain at least one uppercase letter")
+        
+        if not any(c.islower() for c in value):
+            raise serializers.ValidationError("Password must contain at least one lowercase letter")
+        
         return value

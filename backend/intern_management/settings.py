@@ -238,3 +238,6 @@ try:
     seed_document_types()
 except Exception as e:
     print(f"Warning: Could not seed document types: {e}")
+
+# Frontend URL for password reset links
+FRONTEND_URL = config('FRONTEND_URL', default='https://intern-management-system-5q9u-mkkfnjmwo.vercel.app')
