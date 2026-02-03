@@ -577,3 +577,17 @@ def validate_reset_token(request, token):
             'valid': False,
             'message': 'Invalid token'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def debug_password_reset(request):
+    """Debug endpoint to check if password reset views are loaded"""
+    return Response({
+        'message': 'Password reset views are loaded',
+        'endpoints': [
+            '/auth/password-reset/',
+            '/auth/password-reset/confirm/',
+            '/auth/password-reset/validate/<token>/'
+        ]
+    }, status=status.HTTP_200_OK)
