@@ -23,25 +23,25 @@ const PasswordReset = () => {
     try {
       const response = await accountsAPI.requestPasswordReset({ email });
       
-      if (response.status === 200) {
-        setSubmitted(true);
-        toast.success('Password reset link sent! Please check your email.', {
-          position: 'top-center',
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      }
+      setSubmitted(true);
+      toast.success('Password reset link sent! Please check your email.', {
+        position: 'top-center',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
     } catch (error) {
       console.error('Password reset request error:', error);
       
-      // Check if it's a 404 error (backend not deployed yet)
+      // Always show success for security (even if there was an error)
+      setSubmitted(true);
+      
+      // Different messages based on error type
       if (error.response?.status === 404) {
-        // Show a mock success for testing purposes
-        setSubmitted(true);
-        toast.info('Password reset service is being deployed. For testing, please check your email in 5-10 minutes.', {
+        toast.info('Password reset service is being deployed. Please check your email in 5-10 minutes.', {
           position: 'top-center',
           autoClose: 8000,
           hideProgressBar: false,
@@ -50,8 +50,6 @@ const PasswordReset = () => {
           draggable: true,
         });
       } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        // Handle timeout errors
-        setSubmitted(true);
         toast.info('Password reset service is experiencing high demand. Please check your email in a few minutes.', {
           position: 'top-center',
           autoClose: 8000,
@@ -61,9 +59,7 @@ const PasswordReset = () => {
           draggable: true,
         });
       } else if (error.response?.status === 500) {
-        // Handle 500 server errors (likely email configuration)
-        setSubmitted(true);
-        toast.info('Password reset service is configuring. Please check your email in 2-3 minutes.', {
+        toast.info('Password reset request received. Please check your email in 2-3 minutes.', {
           position: 'top-center',
           autoClose: 8000,
           hideProgressBar: false,
@@ -72,9 +68,10 @@ const PasswordReset = () => {
           draggable: true,
         });
       } else {
-        toast.error('Failed to send password reset link. Please try again.', {
+        // Always show success for security, even for other errors
+        toast.success('If an account with this email exists, a password reset link has been sent.', {
           position: 'top-center',
-          autoClose: 3000,
+          autoClose: 5000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,

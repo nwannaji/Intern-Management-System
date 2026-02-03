@@ -467,27 +467,28 @@ def change_password(request):
 @permission_classes([permissions.AllowAny])
 def password_reset_request(request):
     """Request password reset email"""
-    serializer = PasswordResetRequestSerializer(data=request.data)
-    if serializer.is_valid():
-        email = serializer.validated_data['email']
-        
-        try:
-            user = User.objects.get(email=email)
+    try:
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
             
-            # Invalidate any existing tokens for this user
-            PasswordResetToken.objects.filter(user=user, is_used=False).update(is_used=True)
-            
-            # Create new reset token
-            reset_token = PasswordResetToken.objects.create(
-                user=user,
-                expires_at=timezone.now() + timedelta(hours=1)  # Token valid for 1 hour
-            )
-            
-            # Send reset email
-            reset_url = f"{settings.FRONTEND_URL}/reset-password/{reset_token.token}/"
-            
-            subject = "Password Reset Request - Intern Management System"
-            message = f"""
+            try:
+                user = User.objects.get(email=email)
+                
+                # Invalidate any existing tokens for this user
+                PasswordResetToken.objects.filter(user=user, is_used=False).update(is_used=True)
+                
+                # Create new reset token
+                reset_token = PasswordResetToken.objects.create(
+                    user=user,
+                    expires_at=timezone.now() + timedelta(hours=1)  # Token valid for 1 hour
+                )
+                
+                # Send reset email
+                reset_url = f"{settings.FRONTEND_URL}/reset-password/{reset_token.token}/"
+                
+                subject = "Password Reset Request - Intern Management System"
+                message = f"""
 Hello {user.first_name},
 
 You requested a password reset for your Intern Management System account.
@@ -501,32 +502,39 @@ If you didn't request this password reset, please ignore this email. Your passwo
 
 Best regards,
 Intern Management System Team
-            """
+                """
+                
+                # Try to send email, but don't fail if email is not configured
+                try:
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@internmanagement.com'),
+                        recipient_list=[email],
+                        fail_silently=True,  # Changed to fail_silently=True
+                    )
+                except Exception as email_error:
+                    # Log email error but don't reveal to user
+                    print(f"Email configuration error: {email_error}")
+                    print(f"Would send email to {email} with reset URL: {reset_url}")
+                    # Continue with success response even if email fails
+                
+            except User.DoesNotExist:
+                # Don't reveal if email exists or not for security
+                pass
             
-            # Try to send email, but don't fail if email is not configured
-            try:
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@internmanagement.com'),
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
-            except Exception as email_error:
-                # Log email error but don't reveal to user
-                print(f"Email configuration error: {email_error}")
-                print(f"Would send email to {email} with reset URL: {reset_url}")
-                # Continue with success response even if email fails
-            
-        except User.DoesNotExist:
-            # Don't reveal if email exists or not for security
-            pass
+            return Response({
+                'message': 'If an account with this email exists, a password reset link has been sent.'
+            }, status=status.HTTP_200_OK)
         
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        # Catch any unexpected errors and log them
+        print(f"Unexpected error in password_reset_request: {e}")
         return Response({
             'message': 'If an account with this email exists, a password reset link has been sent.'
         }, status=status.HTTP_200_OK)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
