@@ -7,6 +7,7 @@ import DashboardAuth from './pages/DashboardAuth';
 import Register from './pages/Register';
 import PasswordReset from './pages/PasswordReset';
 import PasswordResetConfirm from './pages/PasswordResetConfirm';
+import TestPasswordReset from './pages/TestPasswordReset';
 import Programs from './pages/Programs';
 import ApplyPage from './pages/ApplyPage';
 import ApplicationForm from './pages/ApplicationForm';
@@ -26,6 +27,7 @@ function App() {
             <Route path="/auth" element={<DashboardAuth />} />
             <Route path="/register" element={<Register />} />
             <Route path="/password-reset" element={<PasswordReset />} />
+            <Route path="/test-password-reset" element={<TestPasswordReset />} />
             <Route path="/reset-password/:token" element={<PasswordResetConfirm />} />
             <Route path="/programs" element={<Programs />} />
             <Route path="/apply" element={
