@@ -599,3 +599,25 @@ def debug_password_reset(request):
             '/auth/password-reset/validate/<token>/'
         ]
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def list_reset_tokens(request):
+    """Debug endpoint to list all active reset tokens"""
+    tokens = PasswordResetToken.objects.filter(is_used=False, expires_at__gt=timezone.now())
+    token_data = []
+    for token in tokens:
+        reset_url = f"{settings.FRONTEND_URL}/reset-password/{token.token}/"
+        token_data.append({
+            'email': token.user.email,
+            'token': str(token.token),
+            'reset_url': reset_url,
+            'created_at': token.created_at,
+            'expires_at': token.expires_at
+        })
+    
+    return Response({
+        'active_tokens': token_data,
+        'count': len(token_data)
+    }, status=status.HTTP_200_OK)
