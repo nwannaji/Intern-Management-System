@@ -503,20 +503,20 @@ Best regards,
 Intern Management System Team
             """
             
+            # Try to send email, but don't fail if email is not configured
             try:
                 send_mail(
                     subject=subject,
                     message=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@internmanagement.com'),
                     recipient_list=[email],
                     fail_silently=False,
                 )
-            except Exception as e:
+            except Exception as email_error:
                 # Log email error but don't reveal to user
-                print(f"Failed to send password reset email: {e}")
-                return Response({
-                    'message': 'If an account with this email exists, a password reset link has been sent.'
-                }, status=status.HTTP_200_OK)
+                print(f"Email configuration error: {email_error}")
+                print(f"Would send email to {email} with reset URL: {reset_url}")
+                # Continue with success response even if email fails
             
         except User.DoesNotExist:
             # Don't reveal if email exists or not for security
