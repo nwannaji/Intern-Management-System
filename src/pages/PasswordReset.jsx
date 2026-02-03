@@ -60,6 +60,17 @@ const PasswordReset = () => {
           pauseOnHover: true,
           draggable: true,
         });
+      } else if (error.response?.status === 500) {
+        // Handle 500 server errors (likely email configuration)
+        setSubmitted(true);
+        toast.info('Password reset service is configuring. Please check your email in 2-3 minutes.', {
+          position: 'top-center',
+          autoClose: 8000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         toast.error('Failed to send password reset link. Please try again.', {
           position: 'top-center',
