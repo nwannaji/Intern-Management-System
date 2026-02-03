@@ -16,6 +16,15 @@ import ApplicationDetail from './pages/ApplicationDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Positions from './pages/Positions';
 
+// Simple component to test routing
+const SimplePasswordReset = () => (
+  <div style={{ padding: '20px', textAlign: 'center' }}>
+    <h1>Password Reset</h1>
+    <p>Simple password reset page for testing</p>
+    <a href="/login">Back to Login</a>
+  </div>
+);
+
 function App() {
   return (
     <>
@@ -27,6 +36,7 @@ function App() {
             <Route path="/auth" element={<DashboardAuth />} />
             <Route path="/register" element={<Register />} />
             <Route path="/password-reset" element={<PasswordReset />} />
+            <Route path="/simple-password-reset" element={<SimplePasswordReset />} />
             <Route path="/test-password-reset" element={<TestPasswordReset />} />
             <Route path="/reset-password/:token" element={<PasswordResetConfirm />} />
             <Route path="/programs" element={<Programs />} />
