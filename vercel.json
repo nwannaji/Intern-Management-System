@@ -11,6 +11,10 @@
       "dest": "/assets/$1"
     },
     {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
@@ -49,5 +53,10 @@
   "env": {
     "VITE_API_BASE_URL": "https://intern-management-backend-gi46.onrender.com/api",
     "VITE_MEDIA_URL": "https://intern-management-backend-gi46.onrender.com/media"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
   }
 }
