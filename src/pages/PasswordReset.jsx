@@ -36,14 +36,27 @@ const PasswordReset = () => {
       }
     } catch (error) {
       console.error('Password reset request error:', error);
-      toast.error('Failed to send password reset link. Please try again.', {
-        position: 'top-center',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      
+      // Check if it's a 404 error (backend not deployed yet)
+      if (error.response?.status === 404) {
+        toast.error('Password reset service is being deployed. Please try again in 5-10 minutes.', {
+          position: 'top-center',
+          autoClose: 8000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } else {
+        toast.error('Failed to send password reset link. Please try again.', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
     } finally {
       setLoading(false);
     }
