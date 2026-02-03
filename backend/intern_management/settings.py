@@ -241,3 +241,6 @@ except Exception as e:
 
 # Frontend URL for password reset links
 FRONTEND_URL = config('FRONTEND_URL', default='https://intern-management-system-5q9u-mkkfnjmwo.vercel.app')
+
+# Password reset settings
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds
