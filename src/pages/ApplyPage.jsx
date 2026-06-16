@@ -74,7 +74,6 @@ const ApplyPage = () => {
       setPrograms(activePrograms);
     } catch (error) {
       toast.error('Failed to fetch programs');
-      console.error('Error fetching programs:', error);
     } finally {
       setIsLoading(false);
     }
@@ -231,7 +230,6 @@ const ApplyPage = () => {
       });
     } catch (error) {
       toast.error('Failed to proceed with application');
-      console.error('Error:', error);
     } finally {
       setIsSubmitting(false);
     }

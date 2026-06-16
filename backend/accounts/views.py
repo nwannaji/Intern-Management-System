@@ -7,390 +7,46 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
-from .models import User, Profile, PasswordResetToken
-from .serializers import (UserSerializer, RegistrationSerializer, LoginSerializer, 
-                         PasswordChangeSerializer, ProfileSerializer,
-                         PasswordResetRequestSerializer, PasswordResetConfirmSerializer)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def ensure_test_user(request):
-    """Ensure test user exists with correct credentials"""
-    try:
-        from django.contrib.auth import authenticate
-        from django.contrib.auth import get_user_model
-        from rest_framework.authtoken.models import Token
-        
-        User = get_user_model()
-        
-        # Create or update test user
-        user, created = User.objects.get_or_create(
-            email='edenwannaji1980@gmail.com',
-            defaults={
-                'username': 'edenwannaji1980',
-                'first_name': 'Admin',
-                'last_name': 'User',
-                'role': 'admin',
-                'is_staff': True,
-                'is_superuser': True,
-                'is_active': True,
-            }
-        )
-        
-        if created:
-            user.set_password('@admin123')
-            user.save()
-            message = 'Test user created successfully'
-        else:
-            # Update password and ensure admin privileges
-            user.set_password('@admin123')
-            user.is_active = True
-            user.role = 'admin'
-            user.is_staff = True
-            user.is_superuser = True
-            user.save()
-            message = 'Test user updated successfully'
-        
-        # Test authentication
-        auth_user = authenticate(username='edenwannaji1980@gmail.com', password='@admin123')
-        
-        # Get or create token
-        token, token_created = Token.objects.get_or_create(user=user)
-        
-        return Response({
-            'success': True,
-            'message': message,
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'role': user.role,
-                'is_active': user.is_active,
-                'is_staff': user.is_staff,
-            },
-            'auth_test': {
-                'can_authenticate': auth_user is not None,
-                'token': token.key,
-                'token_created': token_created
-            },
-            'credentials': {
-                'email': 'edenwannaji1980@gmail.com',
-                'password': '@admin123'
-            }
-        })
-        
-    except Exception as e:
-        return Response({
-            'error': str(e),
-            'debug': 'Failed to ensure test user'
-        }, status=500)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def simple_login(request):
-    """Simple login endpoint for debugging"""
-    try:
-        from django.contrib.auth import authenticate
-        from rest_framework.authtoken.models import Token
-        
-        email = request.data.get('email')
-        password = request.data.get('password')
-        
-        if not email or not password:
-            return Response({
-                'error': 'Email and password are required'
-            }, status=400)
-        
-        # Authenticate user
-        user = authenticate(username=email, password=password)
-        
-        if user:
-            # Get or create token
-            token, created = Token.objects.get_or_create(user=user)
-            
-            return Response({
-                'success': True,
-                'token': token.key,
-                'user': {
-                    'id': user.id,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'role': user.role,
-                    'is_staff': user.is_staff,
-                    'is_superuser': user.is_superuser
-                }
-            })
-        else:
-            return Response({
-                'error': 'Invalid credentials',
-                'debug': 'Authentication failed'
-            }, status=400)
-            
-    except Exception as e:
-        return Response({
-            'error': str(e),
-            'debug': 'Exception occurred'
-        }, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def debug_auth(request):
-    """Debug authentication issues"""
-    try:
-        from django.contrib.auth import authenticate
-        from .models import User
-        
-        email = 'edenwannaji1980@gmail.com'
-        password = '@admin123'
-        
-        # Check if user exists
-        try:
-            user = User.objects.get(email=email)
-            user_info = {
-                'exists': True,
-                'email': user.email,
-                'is_active': user.is_active,
-                'is_staff': user.is_staff,
-                'is_superuser': user.is_superuser,
-                'username': user.username,
-                'password_check': user.check_password(password)
-            }
-        except User.DoesNotExist:
-            user_info = {'exists': False}
-        
-        # Test authentication
-        auth_user = authenticate(username=email, password=password)
-        auth_result = {
-            'authenticated': auth_user is not None,
-            'auth_user_email': auth_user.email if auth_user else None
-        }
-        
-        return Response({
-            'user_info': user_info,
-            'auth_result': auth_result,
-            'credentials_tested': {
-                'email': email,
-                'password': password
-            }
-        })
-    except Exception as e:
-        return Response({
-            'error': str(e)
-        }, status=400)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def create_test_user(request):
-    """Create a test user for development"""
-    try:
-        # First, ensure database tables exist
-        from django.core.management import call_command
-        call_command('migrate', verbosity=0, interactive=False)
-        
-        user, created = User.objects.get_or_create(
-            email='edenwannaji1980@gmail.com',
-            defaults={
-                'first_name': 'Henry',
-                'last_name': 'Nwatu',
-                'is_staff': True,
-                'is_superuser': True,
-            }
-        )
-        
-        if created:
-            user.set_password('@admin123')
-            user.save()
-            return Response({
-                'message': 'Test user created successfully in PostgreSQL',
-                'email': 'edenwannaji1980@gmail.com',
-                'password': '@admin123',
-                'database': 'PostgreSQL'
-            })
-        else:
-            # Update password for existing user
-            user.set_password('@admin123')
-            user.save()
-            return Response({
-                'message': 'Test user password updated in PostgreSQL',
-                'email': 'edenwannaji1980@gmail.com',
-                'password': '@admin123',
-                'database': 'PostgreSQL'
-            })
-    except Exception as e:
-        return Response({
-            'error': str(e),
-            'database': 'PostgreSQL connection failed'
-        }, status=400)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def register_admin(request):
-    """Register a new admin user"""
-    try:
-        from django.contrib.auth import get_user_model
-        from rest_framework.authtoken.models import Token
-        
-        User = get_user_model()
-        
-        email = request.data.get('email')
-        password = request.data.get('password')
-        first_name = request.data.get('first_name', '')
-        last_name = request.data.get('last_name', '')
-        username = request.data.get('username', email.split('@')[0] if email else '')
-        
-        if not email or not password:
-            return Response({
-                'error': 'Email and password are required'
-            }, status=400)
-        
-        # Check if user already exists
-        if User.objects.filter(email=email).exists():
-            return Response({
-                'error': 'User with this email already exists'
-            }, status=400)
-        
-        # Create admin user
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            role='admin'  # Set role to admin
-        )
-        
-        # Create token
-        token, created = Token.objects.get_or_create(user=user)
-        
-        return Response({
-            'success': True,
-            'message': 'Admin user created successfully',
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'role': user.role,
-                'username': user.username
-            },
-            'token': token.key
-        }, status=status.HTTP_201_CREATED)
-        
-    except Exception as e:
-        return Response({
-            'error': str(e),
-            'debug': 'Admin registration failed'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def create_sample_document_types(request):
-    """Create sample document types using the management command"""
-    try:
-        from django.core.management import call_command
-        
-        # Run the create_sample_document_types management command
-        call_command('create_sample_document_types', verbosity=1)
-        
-        return Response({
-            'success': True,
-            'message': 'Sample document types created successfully in production database'
-        })
-        
-    except Exception as e:
-        return Response({
-            'error': str(e),
-            'debug': 'Failed to create sample document types'
-        }, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def create_sample_programs(request):
-    """Create sample programs using the management command"""
-    try:
-        from django.core.management import call_command
-        
-        # Run the create_sample_programs management command
-        call_command('create_sample_programs', verbosity=1)
-        
-        return Response({
-            'success': True,
-            'message': 'Sample programs created successfully in production database'
-        })
-        
-    except Exception as e:
-        return Response({
-            'error': str(e),
-            'debug': 'Failed to create sample programs'
-        }, status=500)
+from intern_management.permissions import IsAdmin, IsAdminOrSupervisor
+from .models import User, Profile, PasswordResetToken, SupervisorAssignment
+from .serializers import (
+    UserSerializer, UserListSerializer, UserRoleUpdateSerializer,
+    RegistrationSerializer, LoginSerializer, PasswordChangeSerializer,
+    ProfileSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    SupervisorAssignmentSerializer
+)
 
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):
-    """Registration endpoint with simple implementation"""
+    """Registration endpoint for interns"""
     try:
-        from django.contrib.auth import get_user_model
-        from rest_framework.authtoken.models import Token
-        
-        User = get_user_model()
-        
         email = request.data.get('email')
         password = request.data.get('password')
         first_name = request.data.get('first_name', '')
         last_name = request.data.get('last_name', '')
         username = request.data.get('username', email.split('@')[0] if email else '')
-        
+
         if not email or not password:
-            return Response({
-                'error': 'Email and password are required'
-            }, status=400)
-        
-        # Check if user already exists
+            return Response({'error': 'Email and password are required'}, status=400)
+
         if User.objects.filter(email=email).exists():
-            return Response({
-                'error': 'User with this email already exists'
-            }, status=400)
-        
-        # Create user
+            return Response({'error': 'User with this email already exists'}, status=400)
+
         user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            role='intern'
+            username=username, email=email, password=password,
+            first_name=first_name, last_name=last_name, role='intern'
         )
-        
-        # Create token
         token, created = Token.objects.get_or_create(user=user)
-        
+
         return Response({
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'role': user.role,
-                'username': user.username
-            },
+            'user': UserSerializer(user).data,
             'token': token.key
         }, status=status.HTTP_201_CREATED)
-        
+
     except Exception as e:
-        return Response({
-            'error': str(e),
-            'debug': 'Registration failed'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -413,7 +69,7 @@ def login_view(request):
 def logout_view(request):
     try:
         request.user.auth_token.delete()
-    except:
+    except Exception:
         pass
     logout(request)
     return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
@@ -425,7 +81,7 @@ def profile(request):
     if request.method == 'GET':
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
-    
+
     elif request.method == 'PUT':
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
@@ -441,11 +97,11 @@ def profile_details(request):
         profile = request.user.profile
     except Profile.DoesNotExist:
         profile = Profile.objects.create(user=request.user)
-    
+
     if request.method == 'GET':
         serializer = ProfileSerializer(profile)
         return Response(serializer.data)
-    
+
     elif request.method == 'PUT':
         serializer = ProfileSerializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
@@ -466,6 +122,114 @@ def change_password(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# ==================== User Management (Admin) ====================
+
+@api_view(['GET'])
+@permission_classes([IsAdmin])
+def list_users(request):
+    """List all users (admin only)"""
+    users = User.objects.all().order_by('-created_at')
+    role_filter = request.query_params.get('role')
+    if role_filter:
+        users = users.filter(role=role_filter)
+    serializer = UserListSerializer(users, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdmin])
+def update_user_role(request, user_id):
+    """Update a user's role (admin only)"""
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UserRoleUpdateSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(UserSerializer(user).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdmin])
+def deactivate_user(request, user_id):
+    """Deactivate a user account (admin only)"""
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if user == request.user:
+        return Response({'error': 'Cannot deactivate your own account'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.is_active = not user.is_active
+    user.save()
+    status_text = 'deactivated' if not user.is_active else 'activated'
+    return Response({'message': f'User {status_text} successfully'})
+
+
+# ==================== Supervisor Assignments ====================
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAdminOrSupervisor])
+def supervisor_assignments(request):
+    """List or create supervisor assignments"""
+    if request.method == 'GET':
+        assignments = SupervisorAssignment.objects.all()
+        # Filter by supervisor if user is a supervisor
+        if request.user.role == 'supervisor':
+            assignments = assignments.filter(supervisor=request.user)
+        serializer = SupervisorAssignmentSerializer(assignments, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = SupervisorAssignmentSerializer(
+            data=request.data, context={'request': request}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def my_supervisor_interns(request):
+    """List interns available for task assignment.
+
+    For supervisors: returns their assigned interns (or all active interns
+    as a fallback if no assignments exist yet, so the dropdown is never empty).
+    For admins: returns all active interns.
+    """
+    if request.user.role not in ('supervisor', 'admin'):
+        return Response({'error': 'Only supervisors and admins can view this'},
+                       status=status.HTTP_403_FORBIDDEN)
+
+    if request.user.role == 'admin':
+        interns = User.objects.filter(role='intern', is_active=True).order_by('first_name', 'last_name')
+    else:
+        # Get intern IDs from supervisor assignments
+        intern_ids = SupervisorAssignment.objects.filter(
+            supervisor=request.user
+        ).values_list('intern_id', flat=True)
+
+        if intern_ids:
+            interns = User.objects.filter(
+                id__in=intern_ids, is_active=True
+            ).order_by('first_name', 'last_name')
+        else:
+            # Fallback: if no assignments exist yet, show all active interns
+            # so the supervisor can still assign tasks
+            interns = User.objects.filter(role='intern', is_active=True).order_by('first_name', 'last_name')
+
+    serializer = UserListSerializer(interns, many=True)
+    return Response(serializer.data)
+
+
+# ==================== Password Reset ====================
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def password_reset_request(request):
@@ -474,22 +238,16 @@ def password_reset_request(request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data['email']
-            
+
             try:
                 user = User.objects.get(email=email)
-                
-                # Invalidate any existing tokens for this user
                 PasswordResetToken.objects.filter(user=user, is_used=False).update(is_used=True)
-                
-                # Create new reset token
                 reset_token = PasswordResetToken.objects.create(
                     user=user,
-                    expires_at=timezone.now() + timedelta(hours=1)  # Token valid for 1 hour
+                    expires_at=timezone.now() + timedelta(hours=1)
                 )
-                
-                # Send reset email
+
                 reset_url = f"{settings.FRONTEND_URL}/reset-password/{reset_token.token}/"
-                
                 subject = "Password Reset Request - Intern Management System"
                 message = f"""
 Hello {user.first_name},
@@ -501,41 +259,31 @@ Click the link below to reset your password:
 
 This link will expire in 1 hour for security reasons.
 
-If you didn't request this password reset, please ignore this email. Your password will remain unchanged.
+If you didn't request this password reset, please ignore this email.
 
 Best regards,
 Intern Management System Team
                 """
-                
-                # Try to send email
+
                 try:
                     send_mail(
-                        subject=subject,
-                        message=message,
+                        subject=subject, message=message,
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[email],
-                        fail_silently=False,
+                        recipient_list=[email], fail_silently=False,
                     )
-                    print(f"Password reset email sent successfully to {email}")
-                except Exception as email_error:
-                    # Log email error but continue with success response for security
-                    print(f"Failed to send password reset email: {email_error}")
-                    print(f"Reset URL that would be sent: {reset_url}")
-                    # Continue with success response even if email fails for security
-                
+                except Exception:
+                    pass
+
             except User.DoesNotExist:
-                # Don't reveal if email exists or not for security
                 pass
-            
+
             return Response({
                 'message': 'If an account with this email exists, a password reset link has been sent.'
             }, status=status.HTTP_200_OK)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    except Exception as e:
-        # Catch any unexpected errors and log them
-        print(f"Unexpected error in password_reset_request: {e}")
+
+    except Exception:
         return Response({
             'message': 'If an account with this email exists, a password reset link has been sent.'
         }, status=status.HTTP_200_OK)
@@ -549,22 +297,17 @@ def password_reset_confirm(request):
     if serializer.is_valid():
         reset_token = serializer.validated_data['reset_token']
         new_password = serializer.validated_data['new_password']
-        
-        # Change user password
+
         user = reset_token.user
         user.set_password(new_password)
         user.save()
-        
-        # Mark token as used
         reset_token.expire()
-        
-        # Invalidate all user tokens to force re-login
         Token.objects.filter(user=user).delete()
-        
+
         return Response({
             'message': 'Password has been reset successfully. Please login with your new password.'
         }, status=status.HTTP_200_OK)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -575,53 +318,9 @@ def validate_reset_token(request, token):
     try:
         reset_token = PasswordResetToken.objects.get(token=token)
         if reset_token.is_valid():
-            return Response({
-                'valid': True,
-                'message': 'Token is valid'
-            }, status=status.HTTP_200_OK)
+            return Response({'valid': True, 'message': 'Token is valid'}, status=status.HTTP_200_OK)
         else:
-            return Response({
-                'valid': False,
-                'message': 'Token has expired or been used'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'valid': False, 'message': 'Token has expired or been used'},
+                          status=status.HTTP_400_BAD_REQUEST)
     except PasswordResetToken.DoesNotExist:
-        return Response({
-            'valid': False,
-            'message': 'Invalid token'
-        }, status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def debug_password_reset(request):
-    """Debug endpoint to check if password reset views are loaded"""
-    return Response({
-        'message': 'Password reset views are loaded',
-        'endpoints': [
-            '/auth/password-reset/',
-            '/auth/password-reset/confirm/',
-            '/auth/password-reset/validate/<token>/'
-        ]
-    }, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def list_reset_tokens(request):
-    """Debug endpoint to list all active reset tokens"""
-    tokens = PasswordResetToken.objects.filter(is_used=False, expires_at__gt=timezone.now())
-    token_data = []
-    for token in tokens:
-        reset_url = f"{settings.FRONTEND_URL}/reset-password/{token.token}/"
-        token_data.append({
-            'email': token.user.email,
-            'token': str(token.token),
-            'reset_url': reset_url,
-            'created_at': token.created_at,
-            'expires_at': token.expires_at
-        })
-    
-    return Response({
-        'active_tokens': token_data,
-        'count': len(token_data)
-    }, status=status.HTTP_200_OK)
+        return Response({'valid': False, 'message': 'Invalid token'}, status=status.HTTP_404_NOT_FOUND)

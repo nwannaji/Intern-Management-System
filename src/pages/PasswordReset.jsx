@@ -34,8 +34,6 @@ const PasswordReset = () => {
       });
       
     } catch (error) {
-      console.error('Password reset request error:', error);
-      
       // Always show success for security (even if there was an error)
       setSubmitted(true);
       
@@ -108,7 +106,7 @@ const PasswordReset = () => {
         <div className="w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8 md:p-10 transition-all duration-300 ease-in-out hover:shadow-3xl">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
@@ -135,7 +133,7 @@ const PasswordReset = () => {
                     </svg>
                   </div>
                   <input
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 ease-in-out text-gray-900 placeholder-gray-400 bg-gray-50 hover:bg-white focus:bg-white"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out text-gray-900 placeholder-gray-400 bg-gray-50 hover:bg-white focus:bg-white"
                     type="email"
                     name="email"
                     id="email"
@@ -151,7 +149,7 @@ const PasswordReset = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -190,13 +188,13 @@ const PasswordReset = () => {
               <div className="space-y-3">
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 ease-in-out"
+                  className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 ease-in-out"
                 >
                   Send Another Email
                 </button>
                 <Link
                   to="/login"
-                  className="block w-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 ease-in-out text-center"
+                  className="block w-full bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 ease-in-out text-center"
                 >
                   Back to Login
                 </Link>
@@ -208,7 +206,7 @@ const PasswordReset = () => {
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-500">
               Remember your password?{' '}
-              <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500 transition-colors">
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
                 Sign in
               </Link>
             </p>

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "../context/AuthContext";
-import { setAdminToken, logout } from "../services/auth";
 
 const DashboardAuth = () => {
   const [email, setEmail] = useState("");
@@ -15,11 +14,12 @@ const DashboardAuth = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Redirect based on user role
       if (user?.role === 'admin') {
         navigate('/admin', { replace: true });
+      } else if (user?.role === 'supervisor') {
+        navigate('/supervisor', { replace: true });
       } else {
-        navigate('/my-applications', { replace: true });
+        navigate('/dashboard', { replace: true });
       }
     }
   }, [isAuthenticated, user, navigate]);
@@ -35,64 +35,28 @@ const DashboardAuth = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simple test to verify credentials
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Password length:", password.length);
-    console.log("Form data type:", typeof email, typeof password);
-
     if (!email || !password) {
       toast.error("Please enter both email and password");
       setLoading(false);
       return;
     }
 
-    // Create credentials object explicitly
     const credentials = {
       email: email.trim(),
       password: password,
     };
 
-    console.log("Credentials object:", credentials);
-    console.log("Credentials JSON:", JSON.stringify(credentials));
-
     try {
       const result = await login(credentials);
 
       if (result.success) {
-        toast.success("Login successful! Redirecting...", {
-          position: "top-center",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-
-        // Use timeout to prevent throttling
-        setTimeout(() => {
-          navigate("/admin");
-        }, 500);
+        toast.success("Login successful! Redirecting...");
+        // Redirect handled by useEffect above
       } else {
-        toast.error("Invalid email or password", {
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        toast.error(result.error || "Invalid email or password");
       }
     } catch (err) {
-      console.error("DashboardAuth Login Error:", err);
-      toast.error(`Failed to login: ${err.message}`, {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error("Failed to login. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -107,19 +71,6 @@ const DashboardAuth = () => {
       </Link>
 
       <div className="w-full min-h-screen flex justify-center items-center bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 p-4">
-        <ToastContainer 
-          position="top-center"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-        />
-        
         <div className="w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8 md:p-10 transition-all duration-300 ease-in-out hover:shadow-3xl">
           {/* Header */}
           <div className="text-center mb-8">
@@ -136,10 +87,7 @@ const DashboardAuth = () => {
             </p>
           </div>
 
-          <form
-            onSubmit={handleLogin}
-            className="space-y-6"
-          >
+          <form onSubmit={handleLogin} className="space-y-6">
             {/* Email Field */}
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
@@ -232,18 +180,6 @@ const DashboardAuth = () => {
               ) : (
                 "Sign in"
               )}
-            </button>
-            
-            {/* Clear Auth Button */}
-            <button 
-              type="button"
-              onClick={() => {
-                logout();
-                window.location.reload();
-              }}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 ease-in-out text-sm"
-            >
-              Clear Auth & Refresh
             </button>
           </form>
 

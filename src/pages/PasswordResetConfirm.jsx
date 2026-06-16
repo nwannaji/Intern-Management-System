@@ -39,7 +39,6 @@ const PasswordResetConfirm = () => {
         });
       }
     } catch (error) {
-      console.error('Token validation error:', error);
       setTokenValid(false);
       toast.error('Invalid password reset link', {
         position: 'top-center',
@@ -105,7 +104,6 @@ const PasswordResetConfirm = () => {
         }, 3000);
       }
     } catch (error) {
-      console.error('Password reset confirm error:', error);
       const errorMessage = error.response?.data?.message || 'Failed to reset password';
       toast.error(errorMessage, {
         position: 'top-center',

@@ -68,3 +68,17 @@ venv.bak/
 
 .vercel
 .env*.local
+
+# Firebase
+.firebase/
+
+# IDE artifacts
+*.sqbpro
+
+# Documentation build artifacts
+*.docx
+convert_to_word.py
+
+# SQL setup scripts (run once)
+setup_postgresql.sql
+POSTGRESQL_MIGRATION.md

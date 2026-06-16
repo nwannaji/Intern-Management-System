@@ -48,7 +48,6 @@ const ApplicationForm = () => {
         checkExistingApplication()
       ]);
     } catch (error) {
-      console.error('Failed to initialize form:', error);
       toast.error('Failed to load application form');
     } finally {
       setIsLoading(false);
@@ -60,7 +59,6 @@ const ApplicationForm = () => {
       const response = await programsAPI.getProgram(programId);
       setProgram(response.data);
     } catch (error) {
-      console.error('Failed to fetch program:', error);
       toast.error('Failed to load program details');
       navigate('/programs');
     }
@@ -71,19 +69,15 @@ const ApplicationForm = () => {
       const response = await documentsAPI.getDocumentTypes();
       const types = Array.isArray(response.data) ? response.data : [];
       setDocumentTypes(types);
-      
-      console.log('Loaded document types:', types); // Debug log
-      
+
       if (types.length === 0) {
-        console.warn('No document types available');
         
         // Create fallback document types for frontend functionality
         const fallbackTypes = [
           { id: 'school', name: 'School Recommendation Letter', description: 'Recommendation letter from your school', is_required: true },
           { id: 'nysc', name: 'NYSC Orientation Camp Letter', description: 'Letter showing completion of NYSC orientation', is_required: true }
         ];
-        
-        console.log('Using fallback document types:', fallbackTypes);
+
         setDocumentTypes(fallbackTypes);
         
         toast.info('Using default document types. Upload functionality is available.', {
@@ -91,8 +85,6 @@ const ApplicationForm = () => {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch document types:', error);
-      
       // Set fallback types on error as well
       const fallbackTypes = [
         { id: 'school', name: 'School Recommendation Letter', description: 'Recommendation letter from your school', is_required: true },
@@ -127,7 +119,6 @@ const ApplicationForm = () => {
       }
       return false;
     } catch (error) {
-      console.error('Failed to check existing applications:', error);
       return false;
     }
   };
@@ -180,7 +171,6 @@ const ApplicationForm = () => {
     // If no match found, use the first available document type
     if (!matchedDocType && documentTypes.length > 0) {
       matchedDocType = documentTypes[0];
-      console.log(`No filename match for ${fileToProcess.name}, using first available document type: ${matchedDocType.name}`);
     }
     
     // If still no match found and document types are empty, show a more helpful error
@@ -298,8 +288,6 @@ const ApplicationForm = () => {
       const response = await documentsAPI.uploadDocument(formData);
       return response.data;
     } catch (error) {
-      console.error(`Failed to upload document ${documentTypeId}:`, error);
-      
       // Extract specific error message
       let errorMessage = 'Failed to upload document';
       
@@ -386,7 +374,6 @@ const ApplicationForm = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Application submission failed:', error);
       toast.error('Failed to submit application. Please try again.');
     } finally {
       setIsSubmitting(false);

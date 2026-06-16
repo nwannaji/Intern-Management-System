@@ -68,6 +68,12 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == 'admin':
             return Application.objects.all()
+        if user.role == 'supervisor':
+            from accounts.models import SupervisorAssignment
+            intern_ids = SupervisorAssignment.objects.filter(
+                supervisor=user
+            ).values_list('intern_id', flat=True)
+            return Application.objects.filter(applicant_id__in=intern_ids)
         return Application.objects.filter(applicant=user)
     
     def get_serializer_class(self):
@@ -106,31 +112,61 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def approve(self, request, pk=None):
         if request.user.role != 'admin':
-            return Response({'error': 'Only admins can approve applications'}, 
+            return Response({'error': 'Only admins can approve applications'},
                           status=status.HTTP_403_FORBIDDEN)
-        
+
         application = self.get_object()
         application.status = 'approved'
         application.reviewed_by = request.user
         application.save()
-        
-        # Send email notification (to be implemented)
-        
+
+        # Send in-app notification
+        from notifications.utils import send_notification
+        from notifications.tasks import send_application_status_email
+        send_notification(
+            recipient=application.applicant,
+            title='Application Approved',
+            message=f'Your application for {application.program.name} has been approved!',
+            notification_type='application_status',
+            related_object_id=application.id,
+            related_object_type='application',
+        )
+        # Send email via Celery
+        send_application_status_email.delay(
+            application_id=application.id,
+            status='approved',
+        )
+
         serializer = self.get_serializer(application)
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def reject(self, request, pk=None):
         if request.user.role != 'admin':
-            return Response({'error': 'Only admins can reject applications'}, 
+            return Response({'error': 'Only admins can reject applications'},
                           status=status.HTTP_403_FORBIDDEN)
-        
+
         application = self.get_object()
         application.status = 'rejected'
         application.reviewed_by = request.user
         application.save()
-        
-        # Send email notification (to be implemented)
-        
+
+        # Send in-app notification
+        from notifications.utils import send_notification
+        from notifications.tasks import send_application_status_email
+        send_notification(
+            recipient=application.applicant,
+            title='Application Rejected',
+            message=f'Your application for {application.program.name} has been rejected.',
+            notification_type='application_status',
+            related_object_id=application.id,
+            related_object_type='application',
+        )
+        # Send email via Celery
+        send_application_status_email.delay(
+            application_id=application.id,
+            status='rejected',
+        )
+
         serializer = self.get_serializer(application)
         return Response(serializer.data)

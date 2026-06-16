@@ -34,7 +34,6 @@ const ApplicationDetail = () => {
       setDocuments(documentsResponse.data || []);
 
     } catch (error) {
-      console.error('Failed to fetch application details:', error);
       toast.error('Failed to load application details');
       navigate('/my-applications');
     } finally {
@@ -51,7 +50,6 @@ const ApplicationDetail = () => {
       await fetchApplicationDetails(); // Refresh data
       toast.success(`Application ${newStatus.replace('_', ' ')} successfully`);
     } catch (error) {
-      console.error('Failed to update application status:', error);
       toast.error('Failed to update application status');
     } finally {
       setIsUpdating(false);
@@ -70,7 +68,6 @@ const ApplicationDetail = () => {
       await fetchApplicationDetails(); // Refresh data
       toast.success(`Document ${isVerified ? 'verified' : 'unverified'} successfully`);
     } catch (error) {
-      console.error('Failed to update document status:', error);
       toast.error('Failed to update document status');
     }
   };

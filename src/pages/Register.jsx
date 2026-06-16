@@ -84,9 +84,6 @@ const Register = () => {
       return;
     }
 
-    // Debug: Log the form data
-    console.log('Submitting form data:', formData);
-
     // Format date properly if it exists
     const submitData = { ...formData };
     if (submitData.date_of_birth && submitData.date_of_birth !== '') {
@@ -106,8 +103,6 @@ const Register = () => {
     if (result.success) {
       toast.success('Registration successful!');
       navigate('/my-applications', { replace: true });
-    } else {
-      console.error('Registration error details:', result.error);
     }
     
     setIsLoading(false);

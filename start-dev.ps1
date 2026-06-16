@@ -2,7 +2,7 @@ Write-Host "Starting Intern Management System Development Servers..." -Foregroun
 Write-Host ""
 
 Write-Host "Starting Backend Server..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd backend; venv\Scripts\activate; python manage.py runserver" -WindowStyle Normal
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd backend; venv\Scripts\activate; python manage.py runserver 0.0.0.0:8000" -WindowStyle Normal
 
 Write-Host "Waiting for backend to start..." -ForegroundColor Cyan
 Start-Sleep -Seconds 3
@@ -12,7 +12,7 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run dev" -Win
 
 Write-Host ""
 Write-Host "Both servers are starting..." -ForegroundColor Green
-Write-Host "Backend: http://localhost:8000" -ForegroundColor White
-Write-Host "Frontend: http://localhost:5173" -ForegroundColor White
+Write-Host "Backend:  http://localhost:8000  (also http://172.16.2.158:8000 on LAN)" -ForegroundColor White
+Write-Host "Frontend: http://localhost:5174  (also http://172.16.2.158:5174 on LAN)" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Ctrl+C to stop this script" -ForegroundColor Gray

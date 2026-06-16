@@ -28,12 +28,8 @@ const Programs = () => {
 
   const fetchPrograms = async () => {
     try {
-      console.log('Fetching programs...');
       const response = await programsAPI.getPrograms();
-      console.log('Programs API response:', response);
-      console.log('Response status:', response.status);
-      console.log('Response data:', response.data);
-      
+
       // Handle different response formats
       let programsData = response.data;
       if (response.data && response.data.results) {
@@ -42,20 +38,13 @@ const Programs = () => {
         programsData = response.data.data;
       }
       
-      console.log('Final programs data:', programsData);
-      
       // Ensure it's an array
       if (Array.isArray(programsData)) {
         setPrograms(programsData);
-        console.log('Programs set successfully:', programsData.length);
       } else {
-        console.error('Expected array but got:', typeof programsData, programsData);
         setPrograms([]);
       }
     } catch (error) {
-      console.error('Full error object:', error);
-      console.error('Error response:', error.response);
-      console.error('Error message:', error.message);
       toast.error('Failed to fetch programs');
       setPrograms([]);
     } finally {
@@ -74,23 +63,16 @@ const Programs = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Submitting program data:', formData);
-      console.log('Edit mode:', showEditForm, 'Editing program:', editingProgram);
-      
       let response;
       if (showEditForm && editingProgram) {
         // Update existing program
-        console.log(`Updating program ${editingProgram.id}...`);
         response = await programsAPI.updateProgram(editingProgram.id, formData);
-        console.log('Update response:', response);
         toast.success('Program updated successfully!');
         setShowEditForm(false);
         setEditingProgram(null);
       } else {
         // Create new program
-        console.log('Creating new program...');
         response = await programsAPI.createProgram(formData);
-        console.log('Create response:', response);
         toast.success('Program created successfully!');
         setShowAddForm(false);
       }
@@ -108,11 +90,6 @@ const Programs = () => {
       });
       fetchPrograms();
     } catch (error) {
-      console.error('Error saving program:', error);
-      console.error('Error response:', error.response);
-      console.error('Error status:', error.response?.status);
-      console.error('Error data:', error.response?.data);
-      
       if (error.response?.status === 403) {
         toast.error('Permission denied. Only admins can manage programs.');
       } else if (error.response?.status === 405) {
@@ -145,7 +122,6 @@ const Programs = () => {
         toast.success('Program deleted successfully!');
         fetchPrograms();
       } catch (error) {
-        console.error('Error deleting program:', error);
         toast.error('Failed to delete program');
       }
     }

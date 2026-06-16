@@ -2,16 +2,15 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://intern-management-backend-gi46.onrender.com/api';
 
-// Create axios instance with better configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 60000, // 60 second timeout (increased for deployment period)
+  timeout: 60000,
 });
 
-// Request interceptor to add auth token and logging
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -20,76 +19,23 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor with comprehensive error handling
+// Response interceptor
 api.interceptors.response.use(
-  (response) => {
-    console.log('API Response Success:', {
-      status: response.status,
-      data: response.data
-    });
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // Comprehensive error logging
-    console.error('API Response Error:', {
-      message: error.message,
-      code: error.code,
-      config: error.config,
-      response: error.response ? {
-        status: error.response.status,
-        data: error.response.data,
-        headers: error.response.headers
-      } : 'No response'
-    });
-
-    // Handle specific error cases
-    if (error.response) {
-      // Server responded with error status
-      switch (error.response.status) {
-        case 401:
-          // Unauthorized - token expired or invalid
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-          break;
-        case 403:
-          // Forbidden - insufficient permissions
-          console.error('Access forbidden: Insufficient permissions');
-          break;
-        case 404:
-          // Not found
-          console.error('Resource not found');
-          break;
-        case 429:
-          // Rate limited
-          console.error('Too many requests - rate limited');
-          break;
-        case 500:
-          // Server error
-          console.error('Internal server error');
-          break;
-        default:
-          console.error(`HTTP Error ${error.response.status}`);
-      }
-    } else if (error.request) {
-      // Network error - no response received
-      console.error('Network error - no response received');
-    } else {
-      // Request setup error
-      console.error('Request setup error:', error.message);
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     }
-
     return Promise.reject(error);
   }
 );
 
 // Helper function to handle API responses consistently
 const handleResponse = (response) => {
-  // Handle paginated responses
   if (response.data && typeof response.data === 'object') {
     if (response.data.results && Array.isArray(response.data.results)) {
       return {
@@ -103,35 +49,33 @@ const handleResponse = (response) => {
       };
     }
   }
-  
-  // Handle array responses
-  if (Array.isArray(response.data)) {
-    return response;
-  }
-  
-  // Handle object responses
   return response;
 };
 
-// Auth services with better error handling
+// Auth services
 export const authAPI = {
   register: (userData) => api.post('/auth/register/', userData).then(handleResponse),
-  login: (credentials) => api.post('/auth/simple-login/', credentials).then(handleResponse),
+  login: (credentials) => api.post('/auth/login/', credentials).then(handleResponse),
   logout: () => api.post('/auth/logout/').then(handleResponse),
   getProfile: () => api.get('/auth/profile/').then(handleResponse),
   updateProfile: (userData) => api.put('/auth/profile/', userData).then(handleResponse),
   changePassword: (passwordData) => api.post('/auth/change-password/', passwordData).then(handleResponse),
+  getProfileDetails: () => api.get('/auth/profile/details/').then(handleResponse),
+  updateProfileDetails: (data) => api.put('/auth/profile/details/', data).then(handleResponse),
 };
 
-// Accounts services for password reset
+// Accounts services for password reset and user management
 export const accountsAPI = {
   requestPasswordReset: (emailData) => api.post('/auth/password-reset/', emailData).then(handleResponse),
   confirmPasswordReset: (resetData) => api.post('/auth/password-reset/confirm/', resetData).then(handleResponse),
   validateResetToken: (token) => api.get(`/auth/password-reset/validate/${token}/`).then(handleResponse),
+  listUsers: () => api.get('/auth/users/').then(handleResponse),
+  updateUserRole: (userId, data) => api.put(`/auth/users/${userId}/role/`, data).then(handleResponse),
+  deactivateUser: (userId) => api.post(`/auth/users/${userId}/deactivate/`).then(handleResponse),
+  getSupervisorAssignments: () => api.get('/auth/supervisor-assignments/').then(handleResponse),
+  createSupervisorAssignment: (data) => api.post('/auth/supervisor-assignments/', data).then(handleResponse),
+  getMySupervisorInterns: () => api.get('/auth/my-supervisor-interns/').then(handleResponse),
 };
-
-// Debug: Log which endpoint is being used
-console.log('AuthAPI configured with refactored register endpoint');
 
 // Programs services
 export const programsAPI = {
@@ -154,78 +98,127 @@ export const applicationsAPI = {
   rejectApplication: (id) => api.post(`/applications/${id}/reject/`).then(handleResponse),
 };
 
-// Documents services with enhanced file handling
+// Documents services
 export const documentsAPI = {
-  getDocumentTypes: () => api.get('/document-types/').then(handleResponse),
+  getDocumentTypes: () => api.get('/documenttypes/').then(handleResponse),
   getDocuments: () => api.get('/documents/').then(handleResponse),
   getDocument: (id) => api.get(`/documents/${id}/`).then(handleResponse),
   getApplicationDocuments: (applicationId) => {
     return api.get(`/documents/?application=${applicationId}`).then(handleResponse);
   },
   uploadDocument: (documentData) => {
-    // Create a separate instance for file uploads
     const uploadApi = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 60000, // 60 second timeout for uploads
+      timeout: 60000,
     });
-    
-    // Add auth token
     const token = localStorage.getItem('token');
     if (token) {
       uploadApi.defaults.headers.Authorization = `Token ${token}`;
     }
-    
     return uploadApi.post('/documents/', documentData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: (progressEvent) => {
-        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        console.log(`Upload progress: ${progress}%`);
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
     }).then(handleResponse);
   },
   verifyDocument: (id) => api.post(`/documents/${id}/verify/`).then(handleResponse),
   unverifyDocument: (id) => api.post(`/documents/${id}/unverify/`).then(handleResponse),
 };
 
-// Utility functions for common operations
+// Notifications services
+export const notificationsAPI = {
+  getNotifications: () => api.get('/notifications/').then(handleResponse),
+  markRead: (ids) => api.post('/notifications/mark_read/', { ids }).then(handleResponse),
+  markAllRead: () => api.post('/notifications/mark_all_read/').then(handleResponse),
+  getUnreadCount: () => api.get('/notifications/unread_count/').then(handleResponse),
+};
+
+// Attendance services
+export const attendanceAPI = {
+  getRecords: () => api.get('/attendance/').then(handleResponse),
+  checkIn: () => api.post('/attendance/check_in/').then(handleResponse),
+  checkOut: () => api.post('/attendance/check_out/').then(handleResponse),
+  getDailySummary: (date) => api.get(`/attendance/daily_summary/?date=${date}`).then(handleResponse),
+  getWeeklySummary: () => api.get('/attendance/weekly_summary/').then(handleResponse),
+  getTodayStatus: () => api.get('/attendance/today_status/').then(handleResponse),
+  generateQR: (period = 'AM') => api.post('/attendance/generate_qr/', { period }).then(handleResponse),
+  qrScan: (token) => api.post('/attendance/qr_scan/', { token }).then(handleResponse),
+  getActiveQR: () => api.get('/attendance/active_qr/').then(handleResponse),
+  deactivateQR: () => api.post('/attendance/deactivate_qr/').then(handleResponse),
+};
+
+// Leave services
+export const leaveAPI = {
+  getLeaveTypes: () => api.get('/leave-types/').then(handleResponse),
+  getLeaveRequests: () => api.get('/leave-requests/').then(handleResponse),
+  getMyLeaveRequests: () => api.get('/leave-requests/my_leave_requests/').then(handleResponse),
+  createLeaveRequest: (data) => api.post('/leave-requests/', data).then(handleResponse),
+  approveLeave: (id, data) => api.post(`/leave-requests/${id}/approve/`, data).then(handleResponse),
+  rejectLeave: (id, data) => api.post(`/leave-requests/${id}/reject/`, data).then(handleResponse),
+  supervisorApproveLeave: (id, data) => api.post(`/leave-requests/${id}/supervisor_approve/`, data).then(handleResponse),
+  supervisorRejectLeave: (id, data) => api.post(`/leave-requests/${id}/supervisor_reject/`, data).then(handleResponse),
+  supervisorCommentLeave: (id, data) => api.post(`/leave-requests/${id}/supervisor_comment/`, data).then(handleResponse),
+  getLeaveBalance: () => api.get('/leave-requests/leave_balance/').then(handleResponse),
+};
+
+// Tasks services
+export const tasksAPI = {
+  getTasks: () => api.get('/tasks/').then(handleResponse),
+  getTask: (id) => api.get(`/tasks/${id}/`).then(handleResponse),
+  createTask: (data) => api.post('/tasks/', data).then(handleResponse),
+  updateTask: (id, data) => api.patch(`/tasks/${id}/`, data).then(handleResponse),
+  updateTaskStatus: (id, status) => api.post(`/tasks/${id}/update_status/`, { status }).then(handleResponse),
+  addComment: (id, comment) => api.post(`/tasks/${id}/add_comment/`, { comment }).then(handleResponse),
+  getComments: (id) => api.get(`/tasks/${id}/list_comments/`).then(handleResponse),
+  markOverdue: () => api.post('/tasks/mark_overdue/').then(handleResponse),
+};
+
+// Reviews services
+export const reviewsAPI = {
+  getReviews: () => api.get('/reviews/').then(handleResponse),
+  getReview: (id) => api.get(`/reviews/${id}/`).then(handleResponse),
+  createReview: (data) => api.post('/reviews/', data).then(handleResponse),
+  updateReview: (id, data) => api.patch(`/reviews/${id}/`, data).then(handleResponse),
+  submitReview: (id) => api.post(`/reviews/${id}/submit/`).then(handleResponse),
+  acknowledgeReview: (id) => api.post(`/reviews/${id}/acknowledge/`).then(handleResponse),
+};
+
+// Onboarding services
+export const onboardingAPI = {
+  getOnboardingTasks: () => api.get('/onboarding-tasks/').then(handleResponse),
+  getProgress: (applicationId) => api.get(`/onboarding-progress/by_application/?application_id=${applicationId}`).then(handleResponse),
+  markComplete: (progressId, notes) => api.post(`/onboarding-progress/${progressId}/mark_complete/`, { notes }).then(handleResponse),
+  initializeForApplication: (applicationId) => api.post('/onboarding-progress/initialize_for_application/', { application_id: applicationId }).then(handleResponse),
+};
+
+// Dashboard/Reports services
+export const dashboardAPI = {
+  getInternDashboard: () => api.get('/dashboard/intern/').then(handleResponse),
+  getSupervisorDashboard: () => api.get('/dashboard/supervisor/').then(handleResponse),
+  getAdminReports: () => api.get('/reports/').then(handleResponse),
+};
+
+// Utility functions
 export const apiUtils = {
-  // Handle API errors consistently
   handleError: (error, defaultMessage = 'An error occurred') => {
-    if (error.response?.data?.detail) {
-      return error.response.data.detail;
-    } else if (error.response?.data?.message) {
-      return error.response.data.message;
-    } else if (error.message) {
-      return error.message;
-    }
+    if (error.response?.data?.detail) return error.response.data.detail;
+    if (error.response?.data?.message) return error.response.data.message;
+    if (error.response?.data?.error) return error.response.data.error;
+    if (error.message) return error.message;
     return defaultMessage;
   },
-  
-  // Check if response is successful
   isSuccess: (response) => response.status >= 200 && response.status < 300,
-  
-  // Extract error messages from response
   extractErrors: (error) => {
     if (error.response?.data) {
       const data = error.response.data;
       if (typeof data === 'object') {
         return Object.keys(data).reduce((acc, key) => {
           const value = data[key];
-          if (Array.isArray(value)) {
-            acc[key] = value.join(', ');
-          } else {
-            acc[key] = value;
-          }
+          acc[key] = Array.isArray(value) ? value.join(', ') : value;
           return acc;
         }, {});
       }
     }
     return {};
   },
-  
-  // Format file size for display
   formatFileSize: (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;

@@ -8,6 +8,13 @@ urlpatterns = [
     path('api/auth/', include('accounts.urls')),
     path('api/', include('applications.urls')),
     path('api/', include('documents.urls')),
+    path('api/', include('notifications.urls')),
+    path('api/', include('attendance.urls')),
+    path('api/', include('leave.urls')),
+    path('api/', include('tasks.urls')),
+    path('api/', include('reviews.urls')),
+    path('api/', include('onboarding.urls')),
+    path('api/', include('reports.urls')),
 ]
 
 if settings.DEBUG:

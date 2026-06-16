@@ -4,94 +4,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET
 
 from .models import DocumentType, Document
 from .serializers import DocumentTypeSerializer, DocumentSerializer, DocumentCreateSerializer
-
-
-@require_GET
-def document_types_list(request):
-    """Simple view to return document types without authentication"""
-    # Auto-seed if no document types exist
-    if DocumentType.objects.count() == 0:
-        try:
-            DocumentType.objects.get_or_create(
-                name='School Recommendation Letter',
-                defaults={
-                    'description': 'Recommendation letter from your school supporting your application',
-                    'is_required': True,
-                    'max_file_size': 5242880,  # 5MB
-                    'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
-                }
-            )
-            
-            DocumentType.objects.get_or_create(
-                name='NYSC Orientation Camp Letter',
-                defaults={
-                    'description': 'Letter showing completion of 3 weeks NYSC orientation camp',
-                    'is_required': True,
-                    'max_file_size': 5242880,  # 5MB
-                    'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
-                }
-            )
-        except Exception as e:
-            # Log error but continue
-            pass
-    
-    types = list(DocumentType.objects.all().values('id', 'name', 'description', 'is_required'))
-    return JsonResponse(types, safe=False)
-
-
-@require_GET
-def seed_document_types_api(request):
-    """API endpoint to seed document types"""
-    from django.http import JsonResponse
-    
-    try:
-        # Check if document types already exist
-        if DocumentType.objects.count() > 0:
-            return JsonResponse({
-                'status': 'info',
-                'message': f'Document types already exist: {DocumentType.objects.count()} found'
-            })
-        
-        # Create document types
-        school_rec, created = DocumentType.objects.get_or_create(
-            name='School Recommendation Letter',
-            defaults={
-                'description': 'Recommendation letter from your school supporting your application',
-                'is_required': True,
-                'max_file_size': 5242880,  # 5MB
-                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
-            }
-        )
-        
-        nysc_letter, created = DocumentType.objects.get_or_create(
-            name='NYSC Orientation Camp Letter',
-            defaults={
-                'description': 'Letter showing completion of 3 weeks NYSC orientation camp',
-                'is_required': True,
-                'max_file_size': 5242880,  # 5MB
-                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
-            }
-        )
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Document types seeded successfully',
-            'types_created': [
-                school_rec.name,
-                nysc_letter.name
-            ]
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Failed to seed document types: {str(e)}'
-        }, status=500)
 
 
 @authentication_classes([])
@@ -110,22 +25,21 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['document_type', 'is_verified', 'application']
     search_fields = ['file_name', 'document_type__name']
     ordering = ['-uploaded_at']
-    
+
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin':
             return Document.objects.all()
         return Document.objects.filter(application__applicant=user)
-    
+
     def get_serializer_class(self):
         if self.action == 'create':
             return DocumentCreateSerializer
         return DocumentSerializer
-    
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.action == 'create':
-            # Safely get application_id from request data
             application_id = None
             if hasattr(self.request, 'data') and self.request.data:
                 application_id = self.request.data.get('application_id')
@@ -133,49 +47,47 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 application_id = self.kwargs.get('application_pk')
             context['application_id'] = application_id
         return context
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         document = serializer.save()
-        
-        # Return the document serialized with full details
+
         response_serializer = DocumentSerializer(document, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-    
+
     def perform_create(self, serializer):
-        # Safely get application_id from request data
         application_id = None
         if hasattr(self.request, 'data') and self.request.data:
             application_id = self.request.data.get('application_id')
         if not application_id:
             application_id = self.kwargs.get('application_pk')
         serializer.save(application_id=application_id)
-    
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def verify(self, request, pk=None):
         if request.user.role != 'admin':
-            return Response({'error': 'Only admins can verify documents'}, 
+            return Response({'error': 'Only admins can verify documents'},
                           status=status.HTTP_403_FORBIDDEN)
-        
+
         document = self.get_object()
         document.is_verified = True
         document.verification_notes = request.data.get('verification_notes', '')
         document.save()
-        
+
         serializer = self.get_serializer(document)
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def unverify(self, request, pk=None):
         if request.user.role != 'admin':
-            return Response({'error': 'Only admins can unverify documents'}, 
+            return Response({'error': 'Only admins can unverify documents'},
                           status=status.HTTP_403_FORBIDDEN)
-        
+
         document = self.get_object()
         document.is_verified = False
         document.verification_notes = request.data.get('verification_notes', '')
         document.save()
-        
+
         serializer = self.get_serializer(document)
         return Response(serializer.data)

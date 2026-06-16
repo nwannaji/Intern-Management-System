@@ -9,7 +9,7 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # Get allowed hosts from environment variable or use defaults
 import os
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com,intern-management-backend-gi46.onrender.com').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0,172.16.2.158,testserver,.onrender.com,intern-management-backend-gi46.onrender.com').split(',')
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -31,6 +31,13 @@ LOCAL_APPS = [
     'accounts',
     'applications',
     'documents',
+    'notifications',
+    'attendance',
+    'leave',
+    'tasks',
+    'reviews',
+    'onboarding',
+    'reports',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -127,52 +134,35 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:54162",
-    "http://172.16.2.78:5174",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
+    "http://172.16.2.158:5173",
+    "http://172.16.2.158:5174",
+    "http://172.16.2.158:5175",
     "https://intern-management-app-nwannaji.vercel.app",
     "https://intern-management-system-three.vercel.app",
-    "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
     "https://intern-management-system-5q9u.vercel.app",
-    "https://intern-management-system-5q9u-4bopiaod8.vercel.app",
-    "https://intern-management-system-5q9u-1gbhyx1dm.vercel.app",
-    "https://*.vercel.app",
-    "http://127.0.0.1:5174",
-    "http://localhost:5175",
-    "http://127.0.0.1:5175",
-    "http://127.0.0.1:59484",
-    "http://localhost:59484",
-    "http://127.0.0.1:51302",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Allow all origins for development (remove in production)
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-
-# Custom CORS middleware to handle dynamic Vercel origins
-def is_vercel_origin(origin):
-    """Check if origin is a Vercel deployment"""
-    if not origin:
-        return False
-    return (
-        'vercel.app' in origin or 
-        origin.endswith('.vercel.app') or
-        'localhost' in origin or
-        '127.0.0.1' in origin
-    )
+# Never allow all origins — use explicit allowlist
+CORS_ALLOW_ALL_ORIGINS = False
 
 # Custom CORS whitelist
 CORS_ORIGIN_WHITELIST = [
     "https://intern-management-app-nwannaji.vercel.app",
-    "https://intern-management-system-three.vercel.app", 
-    "https://intern-management-system-5q9u-a7vf2u0bb.vercel.app",
+    "https://intern-management-system-three.vercel.app",
     "https://intern-management-system-5q9u.vercel.app",
-    "https://intern-management-system-5q9u-4bopiaod8.vercel.app",
-    "https://intern-management-system-5q9u-1gbhyx1dm.vercel.app",
 ]
 
-# Additional CORS settings
+# Additional origins from environment (comma-separated)
+CORS_EXTRA_ORIGINS = config('CORS_EXTRA_ORIGINS', default='')
+
+# CORS allow headers and methods
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -194,57 +184,6 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-
-CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-
-# Auto-seed document types if they don't exist
-def seed_document_types():
-    from documents.models import DocumentType
-    
-    if DocumentType.objects.count() == 0:
-        DocumentType.objects.get_or_create(
-            name='School Recommendation Letter',
-            defaults={
-                'description': 'Recommendation letter from your school supporting your application',
-                'is_required': True,
-                'max_file_size': 5242880,  # 5MB
-                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
-            }
-        )
-        
-        DocumentType.objects.get_or_create(
-            name='NYSC Orientation Camp Letter',
-            defaults={
-                'description': 'Letter showing completion of 3 weeks NYSC orientation camp',
-                'is_required': True,
-                'max_file_size': 5242880,  # 5MB
-                'allowed_extensions': 'pdf,doc,docx,jpg,jpeg,png'
-            }
-        )
-
-# Auto-seed on startup (always run to ensure document types exist)
-try:
-    seed_document_types()
-except Exception as e:
-    print(f"Warning: Could not seed document types: {e}")
-
-# Frontend URL for password reset links
-FRONTEND_URL = config('FRONTEND_URL', default='https://intern-management-system-5q9u-mkkfnjmwo.vercel.app')
-
-# Password reset settings
-PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds
-
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
@@ -254,5 +193,18 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Interns Management System <noreply@taskstracker.com>')
 
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Frontend URL for password reset links
+FRONTEND_URL = config('FRONTEND_URL', default='https://intern-management-system-5q9u.vercel.app')
+
+# Password reset settings
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds
+
 # Deployment tracking
-DEPLOYMENT_VERSION = "2026-02-03-10-05-UTC"
+DEPLOYMENT_VERSION = "2026-06-15"

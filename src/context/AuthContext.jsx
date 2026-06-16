@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { login, logout, register, isAuthenticated, getUser, isAdmin } from '../services/auth';
+import { login, logout, register, isAuthenticated, getUser } from '../services/auth';
 
 const AuthContext = createContext();
 
@@ -156,6 +156,7 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     clearError,
     isAdmin: state.user && state.user.role === 'admin',
+    isSupervisor: state.user && state.user.role === 'supervisor',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
